@@ -32,6 +32,27 @@ namespace {
             *left = std::move(elem);
         }
     }
+
+    template<typename It>
+    void bubble_sort(const It first, const It last)
+    {
+        if (first == last) return;
+
+        using std::iter_swap;
+
+        for (auto again = true; again; ) {
+            again = false;
+
+            for (auto left = first, right = std::next(left); right != last;
+                                                             ++left, ++right) {
+                if (*right < *left) {
+                    using std::iter_swap;
+                    iter_swap(left, right);
+                    again = true;
+                }
+            }
+        }
+    }
 }
 
 int main()
@@ -45,8 +66,15 @@ int main()
         {}
     };
 
-    for (auto& v : vs) {
-        insertion_sort(begin(v), end(v));
-        print(v);
+    for (const auto& v : vs) {
+        auto v1 = v;
+        insertion_sort(begin(v1), end(v1));
+        print(v1);
+
+        auto v2 = v;
+        bubble_sort(begin(v2), end(v2));
+        print(v2);
+
+        std::cout << '\n';
     }
 }
