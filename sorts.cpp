@@ -1,23 +1,14 @@
 #include <algorithm>
+#include <cstddef>
 #include <iostream>
 #include <iterator>
+#include <stack>
+#include <string_view>
+#include <tuple>
+#include <type_traits>
 #include <vector>
 
 namespace {
-    template<typename C>
-    void print(const C& c)
-    {
-        std::cout << '[';
-
-        auto sep = "";
-        for (const auto& x : c) {
-            std::cout << sep << x;
-            sep = ", ";
-        }
-
-        std::cout << "]\n";
-    }
-
     template<typename It>
     void insertion_sort(const It first, const It last)
     {
@@ -187,6 +178,84 @@ namespace {
         quicksort(first, mid);
         quicksort(std::next(mid), last);
     }
+
+    template<typename It>
+    void quicksort_iterative(It first, It last)
+    {
+        std::stack<std::tuple<It, It>> intervals;
+        intervals.emplace(first, last);
+
+        while (!empty(intervals)) {
+            std::tie(first, last) = intervals.top();
+            intervals.pop();
+
+            const auto len = std::distance(first, last);
+            if (len < 2) continue;
+
+            std::iter_swap(first, first + len / 2);
+            const auto& pivot = *first;
+            auto mid = first;
+
+            for (auto cur = std::next(first); cur != last; ++cur)
+                if (*cur < pivot) std::iter_swap(++mid, cur);
+
+            std::iter_swap(first, mid);
+            intervals.emplace(std::next(mid), last);
+            intervals.emplace(first, mid);
+        }
+    }
+
+    template<typename C>
+    void print(const C& c, const std::string_view prefix = " ")
+    {
+        std::cout << prefix << '[';
+
+        auto sep = "";
+        for (const auto& x : c) {
+            std::cout << sep << x;
+            sep = ", ";
+        }
+
+        std::cout << ']';
+    }
+
+    template<typename C>
+    void print_if_small(const C& c, const std::string_view prefix = " ")
+    {
+        static constexpr std::size_t print_threshold {20};
+
+        if (size(c) <= print_threshold) print(c, prefix);
+    }
+
+    template<typename C>
+    using Sorter = void (*)(typename C::iterator, typename C::iterator);
+
+    template<typename C>
+    bool test_one(C c, const Sorter<C> f)
+    {
+        using std::begin, std::end, std::cbegin, std::cend;
+        f(begin(c), end(c));
+        print_if_small(c);
+        return std::is_sorted(cbegin(c), cend(c));
+    }
+
+    template<typename C>
+    constexpr void test(const C&) noexcept
+    {
+    }
+
+    template<typename C, typename... Args>
+    void test(const C& c, const std::string_view label, const Sorter<C> f,
+              Args... args)
+    {
+        static_assert(sizeof...(args) % 2u == 0u);
+
+        std::cout << label << ':' << std::flush;
+        const auto ok = test_one(c, f);
+        std::cout << ' ' << (ok ? "OK." : "FAIL!!!") << '\n';
+
+        test(c, args...);
+    }
 }
 
 int main()
@@ -200,6 +269,24 @@ int main()
         {}
     };
 
+    for (const auto& v : vs) {
+        std::cout << size(v) << "-element vector";
+        print_if_small(v);
+        std::cout << ".\n";
+
+        test(v, "Insertion sort", insertion_sort//,
+        //        "Bubble sort", bubble_sort,
+        //        "Mergesort (top-down, recursive)", mergesort,
+        //        "Mergesort (bottom-up, iterative)", mergesort_iterative,
+        //        "Heapsort", heapsort,
+        //        "Quicksort (recursive)", quicksort,
+        //        "Quicksort (iterative)", quicksort_iterative);
+        );
+
+        std::cout << '\n';
+    }
+
+#if false
     for (const auto& v : vs) {
         print(v);
 
@@ -227,6 +314,11 @@ int main()
         quicksort(begin(v6), end(v6));
         print(v6);
 
+        auto v7 = v;
+        quicksort_iterative(begin(v7), end(v7));
+        print(v7);
+
         std::cout << '\n';
     }
+#endif
 }
