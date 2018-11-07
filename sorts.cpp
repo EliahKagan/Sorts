@@ -57,14 +57,13 @@ namespace {
 
     namespace detail {
         template<typename It>
-        auto make_aux(const It first, const It last)
+        auto
+        make_aux(const typename std::iterator_traits<It>::difference_type len)
         {
             using T = typename std::iterator_traits<It>::value_type;
-            using Aux = std::vector<T>;
-            using Size = typename Aux::size_type;
 
-            Aux aux;
-            aux.reserve(static_cast<Size>(std::distance(first, last)));
+            std::vector<T> aux;
+            aux.reserve(static_cast<typename std::vector<T>::size_type>(len));
             return aux;
         }
 
@@ -94,20 +93,44 @@ namespace {
     template<typename It>
     void mergesort(const It first, const It last)
     {
-        auto aux = detail::make_aux(first, last);
+        auto aux = detail::make_aux<It>(std::distance(first, last));
 
         const auto mergesort_subrange = [&aux](const auto& me, const It first1,
                                                                const It last2) {
-            const auto sublen = std::distance(first1, last2);
-            if (sublen < 2) return;
+            const auto delta = std::distance(first1, last2) / 2;
+            if (delta == 0) return;
 
-            const auto first2 = first1 + sublen / 2;
+            const auto first2 = first1 + delta;
             me(me, first1, first2);
             me(me, first2, last2);
             detail::merge(aux, first1, first2, last2);
         };
 
         mergesort_subrange(mergesort_subrange, first, last);
+    }
+
+    template<typename It>
+    void mergesort_iterative(const It first, const It last)
+    {
+        using Delta = typename std::iterator_traits<It>::difference_type;
+
+        const auto len = std::distance(first, last);
+        auto aux = detail::make_aux<It>(len);
+
+        for (Delta delta1 {1}; delta1 < len; delta1 *= 2) {
+            Delta sublen {0};
+
+            for (auto first1 = first; (sublen += delta1) < len; ) {
+                const auto first2 = std::next(first1, delta1);
+                const auto delta2 = std::min(delta1, len - sublen);
+                const auto last2 = std::next(first2, delta2);
+
+                detail::merge(aux, first1, first2, last2);
+
+                first1 = last2;
+                sublen += delta2;
+            }
+        }
     }
 
     template<typename It>
@@ -177,8 +200,12 @@ int main()
         print(v3);
 
         auto v4 = v;
-        heapsort(begin(v4), end(v4));
+        mergesort_iterative(begin(v4), end(v4));
         print(v4);
+
+        auto v5 = v;
+        heapsort(begin(v5), end(v5));
+        print(v5);
 
         std::cout << '\n';
     }
