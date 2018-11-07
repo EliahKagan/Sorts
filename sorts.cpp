@@ -39,16 +39,13 @@ namespace {
     {
         if (first == last) return;
 
-        using std::iter_swap;
-
         for (auto again = true; again; ) {
             again = false;
 
             for (auto left = first, right = std::next(left); right != last;
                                                              ++left, ++right) {
                 if (*right < *left) {
-                    using std::iter_swap;
-                    iter_swap(left, right);
+                    std::iter_swap(left, right);
                     again = true;
                 }
             }
@@ -168,10 +165,27 @@ namespace {
 
         // Pop each maximum element and place it just after the unsorted region.
         while (--len != 0) {
-            using std::iter_swap;
-            iter_swap(first, first + len);
+            std::iter_swap(first, first + len);
             sift_down(0);
         }
+    }
+
+    template<typename It>
+    void quicksort(const It first, const It last) // c.f K&R 2 impl. (p. 87)
+    {
+        const auto len = std::distance(first, last);
+        if (len < 2) return;
+
+        std::iter_swap(first, first + len / 2);
+        const auto& pivot = *first;
+        auto mid = first;
+
+        for (auto cur = std::next(first); cur != last; ++cur)
+            if (*cur < pivot) std::iter_swap(++mid, cur);
+
+        std::iter_swap(first, mid);
+        quicksort(first, mid);
+        quicksort(std::next(mid), last);
     }
 }
 
@@ -187,6 +201,8 @@ int main()
     };
 
     for (const auto& v : vs) {
+        print(v);
+
         auto v1 = v;
         insertion_sort(begin(v1), end(v1));
         print(v1);
@@ -206,6 +222,10 @@ int main()
         auto v5 = v;
         heapsort(begin(v5), end(v5));
         print(v5);
+
+        auto v6 = v;
+        quicksort(begin(v6), end(v6));
+        print(v6);
 
         std::cout << '\n';
     }
