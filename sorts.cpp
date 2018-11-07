@@ -205,6 +205,22 @@ namespace {
         }
     }
 
+    template<typename>
+    struct Label { };
+
+    template<typename F>
+    inline constexpr auto label_v = Label<const F>::value;
+
+    inline constexpr auto insertion_sort_f = [](const auto first,
+                                                const auto last) {
+        insertion_sort(first, last);
+    };
+
+    template<>
+    struct Label<decltype(insertion_sort_f)> {
+        static constexpr std::string_view value {"Insertion sort"};
+    };
+
     template<typename C>
     void print(const C& c, const std::string_view prefix = " ")
     {
@@ -227,34 +243,24 @@ namespace {
         if (size(c) <= print_threshold) print(c, prefix);
     }
 
-    template<typename C>
-    using Sorter = void (*)(typename C::iterator, typename C::iterator);
-
-    template<typename C>
-    bool test_one(C c, const Sorter<C> f)
+    template<typename C, typename F>
+    void test_one(C c, const F f)
     {
+        std::cout << label_v<F> << ':' << std::flush;
+
         using std::begin, std::end, std::cbegin, std::cend;
         f(begin(c), end(c));
+
         print_if_small(c);
-        return std::is_sorted(cbegin(c), cend(c));
-    }
 
-    template<typename C>
-    constexpr void test(const C&) noexcept
-    {
-    }
-
-    template<typename C, typename... Args>
-    void test(const C& c, const std::string_view label, const Sorter<C> f,
-              Args... args)
-    {
-        static_assert(sizeof...(args) % 2u == 0u);
-
-        std::cout << label << ':' << std::flush;
-        const auto ok = test_one(c, f);
+        const auto ok = std::is_sorted(cbegin(c), cend(c));
         std::cout << ' ' << (ok ? "OK." : "FAIL!!!") << '\n';
+    }
 
-        test(c, args...);
+    template<typename C, typename... Fs>
+    void test(const C& c, const Fs... fs)
+    {
+        (..., test_one(c, fs));
     }
 }
 
@@ -274,14 +280,16 @@ int main()
         print_if_small(v);
         std::cout << ".\n";
 
-        test(v, "Insertion sort", insertion_sort//,
+        test(v, insertion_sort_f);
+
+        //test(v, "Insertion sort", insertion_sort//,
         //        "Bubble sort", bubble_sort,
         //        "Mergesort (top-down, recursive)", mergesort,
         //        "Mergesort (bottom-up, iterative)", mergesort_iterative,
         //        "Heapsort", heapsort,
         //        "Quicksort (recursive)", quicksort,
         //        "Quicksort (iterative)", quicksort_iterative);
-        );
+        //);
 
         std::cout << '\n';
     }

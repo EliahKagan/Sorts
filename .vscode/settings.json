@@ -23,6 +23,24 @@
         "xlocnum": "cpp",
         "xmemory0": "cpp",
         "xstddef": "cpp",
-        "xstring": "cpp"
+        "xstring": "cpp",
+        "cmath": "cpp",
+        "cstdint": "cpp",
+        "cstdio": "cpp",
+        "cstdlib": "cpp",
+        "cstring": "cpp",
+        "deque": "cpp",
+        "iosfwd": "cpp",
+        "iostream": "cpp",
+        "iterator": "cpp",
+        "limits": "cpp",
+        "stack": "cpp",
+        "string_view": "cpp",
+        "typeinfo": "cpp",
+        "utility": "cpp",
+        "xfacet": "cpp",
+        "xmemory": "cpp",
+        "xtr1common": "cpp",
+        "xutility": "cpp"
     }
 }
