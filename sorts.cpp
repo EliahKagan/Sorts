@@ -221,6 +221,65 @@ namespace {
         static constexpr std::string_view value {"Insertion sort"};
     };
 
+    inline constexpr auto bubble_sort_f = [](const auto first,
+                                             const auto last) {
+        bubble_sort(first, last);
+    };
+
+    template<>
+    struct Label<decltype(bubble_sort_f)> {
+        static constexpr std::string_view value {"Bubble sort"};
+    };
+
+    inline constexpr auto mergesort_f = [](const auto first, const auto last) {
+        mergesort(first, last);
+    };
+
+    template<>
+    struct Label<decltype(mergesort_f)> {
+        static constexpr std::string_view value {
+                "Mergesort (top-down, recursive"};
+    };
+
+    inline constexpr auto mergesort_iterative_f = [](const auto first,
+                                                     const auto last) {
+        mergesort_iterative(first, last);
+    };
+
+    template<>
+    struct Label<decltype(mergesort_iterative_f)> {
+        static constexpr std::string_view value {
+                "Mergesort (bottom-up, iterative)"};
+    };
+
+    inline constexpr auto heapsort_f = [](const auto first, const auto last) {
+        heapsort(first, last);
+    };
+
+    template<>
+    struct Label<decltype(heapsort_f)> {
+        static constexpr std::string_view value {"heapsort"};
+    };
+
+    inline constexpr auto quicksort_f = [](const auto first, const auto last) {
+        quicksort(first, last);
+    };
+
+    template<>
+    struct Label<decltype(quicksort_f)> {
+        static constexpr std::string_view value {"quicksort (recursive)"};
+    };
+
+    inline constexpr auto quicksort_iterative_f = [](const auto first,
+                                                     const auto last) {
+        quicksort_iterative(first, last);
+    };
+
+    template<>
+    struct Label<decltype(quicksort_iterative_f)> {
+        static constexpr std::string_view value {"quicksort (iterative)"};
+    };
+
     template<typename C>
     void print(const C& c, const std::string_view prefix = " ")
     {
@@ -280,53 +339,14 @@ int main()
         print_if_small(v);
         std::cout << ".\n";
 
-        test(v, insertion_sort_f);
-
-        //test(v, "Insertion sort", insertion_sort//,
-        //        "Bubble sort", bubble_sort,
-        //        "Mergesort (top-down, recursive)", mergesort,
-        //        "Mergesort (bottom-up, iterative)", mergesort_iterative,
-        //        "Heapsort", heapsort,
-        //        "Quicksort (recursive)", quicksort,
-        //        "Quicksort (iterative)", quicksort_iterative);
-        //);
+        test(v, insertion_sort_f,
+                bubble_sort_f,
+                mergesort_f,
+                mergesort_iterative_f,
+                heapsort_f,
+                quicksort_f,
+                quicksort_iterative_f);
 
         std::cout << '\n';
     }
-
-#if false
-    for (const auto& v : vs) {
-        print(v);
-
-        auto v1 = v;
-        insertion_sort(begin(v1), end(v1));
-        print(v1);
-
-        auto v2 = v;
-        bubble_sort(begin(v2), end(v2));
-        print(v2);
-
-        auto v3 = v;
-        mergesort(begin(v3), end(v3));
-        print(v3);
-
-        auto v4 = v;
-        mergesort_iterative(begin(v4), end(v4));
-        print(v4);
-
-        auto v5 = v;
-        heapsort(begin(v5), end(v5));
-        print(v5);
-
-        auto v6 = v;
-        quicksort(begin(v6), end(v6));
-        print(v6);
-
-        auto v7 = v;
-        quicksort_iterative(begin(v7), end(v7));
-        print(v7);
-
-        std::cout << '\n';
-    }
-#endif
 }
