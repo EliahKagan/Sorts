@@ -256,6 +256,13 @@ namespace {
         }
     }
 
+    template<typename It>
+    void stdlib_heapsort(const It first, const It last)
+    {
+        std::make_heap(first, last);
+        std::sort_heap(first, last);
+    }
+
     template<typename>
     struct Label { };
 
@@ -346,6 +353,17 @@ namespace {
                 "Quicksort (Lomuto partitioning, iterative)"};
     };
 
+    inline constexpr auto stdlib_heapsort_f = [](const auto first,
+                                                 const auto last) {
+        stdlib_heapsort(first, last);
+    };
+
+    template<>
+    struct Label<decltype(stdlib_heapsort_f)> {
+        static constexpr std::string_view value {
+            "std::make_heap + std::sort_heap (heapsort)"};
+    };
+
     inline constexpr auto stdlib_mergesort_f = [](const auto first,
                                                   const auto last) {
         std::stable_sort(first, last);
@@ -433,6 +451,7 @@ namespace {
                            heapsort_f,
                            quicksort_lomuto_f,
                            quicksort_lomuto_iterative_f,
+                           stdlib_heapsort_f,
                            stdlib_mergesort_f,
                            stdlib_introsort_f);
     }
