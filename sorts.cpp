@@ -56,6 +56,36 @@ namespace {
     }
 
     namespace detail {
+        template<typename It>
+        void insertion_sort_subsequence(const It first, const It last,
+                                        const typename std::iterator_traits<It>::difference_type gap)
+        {
+            const auto len = last - first;
+
+            for (auto right = gap; right < len; right += gap) {
+                auto elem = std::move(first[right]);
+
+                auto left = right;
+                for (; left != 0 && elem < first[left - gap]; left -= gap)
+                    first[left] = std::move(first[left - gap]);
+
+                first[left] = std::move(elem);
+            }
+        }
+
+        template<typename It>
+        void shellsort(const It first, const It last,
+                       const std::vector<typename std::iterator_traits<It>::difference_type>& gaps)
+        {
+            std::for_each(std::crbegin(gaps), std::crend(gaps),
+                          [first, last](const typename std::iterator_traits<It>::difference_type gap) {
+                const auto bound = first + gap;
+
+                for (auto start = first; start != bound; ++start)
+                    insertion_sort_subsequence(start, last, gap);
+            });
+        }
+
         // Generates the Tokuda gap sequence. See https://oeis.org/A108870 and
         // formulas at https://en.wikipedia.org/wiki/Shellsort#Gap_sequences.
         template<typename D>
@@ -74,36 +104,12 @@ namespace {
             assert(empty(gaps) || gaps.front() == 1);
             return gaps;
         }
-
-        template<typename It>
-        void gapped_insertion_sort(It first, const It last,
-                                   const typename It::difference_type gap)
-        {
-            for (const auto stop = first + gap; first != stop; ++first) {
-                const auto len = last - first;
-
-                for (auto right = gap; right < len; right += gap) {
-                    auto elem = std::move(first[right]);
-
-                    auto left = right;
-                    for (; left != 0 && elem < first[left - gap]; left -= gap)
-                        first[left] = std::move(first[left - gap]);
-
-                    first[left] = std::move(elem);
-                }
-            }
-        }
     }
 
     template<typename It>
     void shellsort_tokuda(const It first, const It last)
     {
-        const auto gaps = detail::tokuda_gaps(std::distance(first, last));
-
-        std::for_each(std::crbegin(gaps), std::crend(gaps),
-                      [first, last](const typename It::difference_type gap) {
-            detail::gapped_insertion_sort(first, last, gap);
-        });
+        detail::shellsort(first, last, detail::tokuda_gaps(last - first));
     }
 
     namespace detail {
