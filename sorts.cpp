@@ -120,10 +120,10 @@ namespace {
             const auto [first1, last2] = intervals.top();
 
             if (const auto first2 = detail::midpoint(first1, last2);
-                    // The right branch is non-empty, and...
-                    first2 != last2 &&
-                    // we were not just there.
-                    (first2 != post_first || last2 != post_last)) {
+                    // The right branch is big enough to need sorting...
+                    first2 != last2 && std::next(first2) != last2
+                    // ...and we were not just there.
+                        && (first2 != post_first || last2 != post_last)) {
                 // Traverse there next.
                 first = first2;
                 last = last2;
@@ -309,7 +309,7 @@ namespace {
 
     template<>
     struct Label<decltype(heapsort_f)> {
-        static constexpr std::string_view value {"heapsort"};
+        static constexpr std::string_view value {"Heapsort"};
     };
 
     inline constexpr auto quicksort_f = [](const auto first, const auto last) {
@@ -318,7 +318,7 @@ namespace {
 
     template<>
     struct Label<decltype(quicksort_f)> {
-        static constexpr std::string_view value {"quicksort (recursive)"};
+        static constexpr std::string_view value {"Quicksort (recursive)"};
     };
 
     inline constexpr auto quicksort_iterative_f = [](const auto first,
@@ -328,7 +328,7 @@ namespace {
 
     template<>
     struct Label<decltype(quicksort_iterative_f)> {
-        static constexpr std::string_view value {"quicksort (iterative)"};
+        static constexpr std::string_view value {"Quicksort (iterative)"};
     };
 
     template<typename C>
@@ -377,6 +377,7 @@ namespace {
 int main()
 {
     std::vector<std::vector<int>> vs {
+        {111, 333, 222},
         {3, 7, 1, 5, 2, -6, 15, 4, 33, -5},
         {9, 9, 1, 8, 3, 0, 2, 0, 7, 15, 4, 3, 3},
         {2, 1},
