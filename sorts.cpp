@@ -48,6 +48,19 @@ namespace {
 
     namespace detail {
         template<typename It>
+        constexpr bool possibly_unsorted(It first, const It last) noexcept
+        {
+            return first != last && ++first != last;
+        }
+
+        template<typename It>
+        constexpr It midpoint(It first, const It last) noexcept
+        {
+            std::advance(first, std::distance(first, last) / 2);
+            return first;
+        }
+
+        template<typename It>
         auto
         make_aux(const typename std::iterator_traits<It>::difference_type len)
         {
@@ -100,14 +113,6 @@ namespace {
         mergesort_subrange(mergesort_subrange, first, last);
     }
 
-    namespace detail {
-        template<typename It>
-        inline It midpoint(const It first, const It last) noexcept
-        {
-            return std::next(first, std::distance(first, last) / 2);
-        }
-    }
-
     template<typename It>
     void mergesort_topdown_iterative(It first, It last)
     {
@@ -124,7 +129,7 @@ namespace {
 
             if (const auto first2 = detail::midpoint(first1, last2);
                     // The right branch is big enough to need sorting...
-                    first2 != last2 && std::next(first2) != last2
+                    detail::possibly_unsorted(first2, last2)
                     // ...and we were not just there.
                         && (first2 != post_first || last2 != post_last)) {
                 // Traverse there next.
@@ -204,26 +209,37 @@ namespace {
         }
     }
 
-    template<typename It>
-    void quicksort(const It first, const It last) // c.f. K&R 2 impl. (p. 87)
-    {
-        const auto len = std::distance(first, last);
-        if (len < 2) return;
+    namespace detail {
+        // Assumes [first, last) is nonempty, partitions it, and returns an
+        // iterator to the pivot. Like the Lomuto scheme, but chooses the pivot
+        // from the middle, not the end. This is the K&R 2 algorithm (p. 87).
+        template<typename It>
+        It partition_lomuto(const It first, const It last)
+        {
+            std::iter_swap(first, midpoint(first, last));
+            const auto& pivot = *first;
+            auto mid = first;
 
-        std::iter_swap(first, first + len / 2);
-        const auto& pivot = *first;
-        auto mid = first;
+            for (auto cur = std::next(first); cur != last; ++cur)
+                if (*cur < pivot) std::iter_swap(++mid, cur);
 
-        for (auto cur = std::next(first); cur != last; ++cur)
-            if (*cur < pivot) std::iter_swap(++mid, cur);
-
-        std::iter_swap(first, mid);
-        quicksort(first, mid);
-        quicksort(std::next(mid), last);
+            std::iter_swap(first, mid);
+            return mid;
+        }
     }
 
     template<typename It>
-    void quicksort_iterative(It first, It last)
+    void quicksort_lomuto(const It first, const It last)
+    {
+        if (detail::possibly_unsorted(first, last)) {
+            auto mid = detail::partition_lomuto(first, last);
+            quicksort_lomuto(first, mid);
+            quicksort_lomuto(++mid, last);
+        }
+    }
+
+    template<typename It>
+    void quicksort_lomuto_iterative(It first, It last)
     {
         std::stack<std::tuple<It, It>> intervals;
         intervals.emplace(first, last);
@@ -232,17 +248,9 @@ namespace {
             std::tie(first, last) = intervals.top();
             intervals.pop();
 
-            const auto len = std::distance(first, last);
-            if (len < 2) continue;
+            if (!detail::possibly_unsorted(first, last)) continue;
 
-            std::iter_swap(first, first + len / 2);
-            const auto& pivot = *first;
-            auto mid = first;
-
-            for (auto cur = std::next(first); cur != last; ++cur)
-                if (*cur < pivot) std::iter_swap(++mid, cur);
-
-            std::iter_swap(first, mid);
+            const auto mid = detail::partition_lomuto(first, last);
             intervals.emplace(std::next(mid), last);
             intervals.emplace(first, mid);
         }
@@ -316,23 +324,26 @@ namespace {
         static constexpr std::string_view value {"Heapsort"};
     };
 
-    inline constexpr auto quicksort_f = [](const auto first, const auto last) {
-        quicksort(first, last);
+    inline constexpr auto quicksort_lomuto_f = [](const auto first,
+                                                  const auto last) {
+        quicksort_lomuto(first, last);
     };
 
     template<>
-    struct Label<decltype(quicksort_f)> {
-        static constexpr std::string_view value {"Quicksort (recursive)"};
+    struct Label<decltype(quicksort_lomuto_f)> {
+        static constexpr std::string_view value {
+                "Quicksort (Lomuto partitioning, recursive)"};
     };
 
-    inline constexpr auto quicksort_iterative_f = [](const auto first,
-                                                     const auto last) {
-        quicksort_iterative(first, last);
+    inline constexpr auto quicksort_lomuto_iterative_f = [](const auto first,
+                                                            const auto last) {
+        quicksort_lomuto_iterative(first, last);
     };
 
     template<>
-    struct Label<decltype(quicksort_iterative_f)> {
-        static constexpr std::string_view value {"Quicksort (iterative)"};
+    struct Label<decltype(quicksort_lomuto_iterative_f)> {
+        static constexpr std::string_view value {
+                "Quicksort (Lomuto partitioning, iterative)"};
     };
 
     template<typename C>
@@ -379,7 +390,7 @@ namespace {
     }
 
     template<typename C, typename... Fs>
-    void test(const C& c, const Fs... fs)
+    void test_algorithms(const C& c, const Fs... fs)
     {
         (..., test_one(c, fs));
     }
@@ -387,19 +398,19 @@ namespace {
     template<typename C>
     void test_slow(const C& c)
     {
-        test(c, insertion_sort_f,
-                bubble_sort_f);
+        test_algorithms(c, insertion_sort_f,
+                           bubble_sort_f);
     }
 
     template<typename C>
     void test_fast(const C& c)
     {
-        test(c, mergesort_topdown_f,
-                mergesort_topdown_iterative_f,
-                mergesort_bottomup_iterative_f,
-                heapsort_f,
-                quicksort_f,
-                quicksort_iterative_f);
+        test_algorithms(c, mergesort_topdown_f,
+                           mergesort_topdown_iterative_f,
+                           mergesort_bottomup_iterative_f,
+                           heapsort_f,
+                           quicksort_lomuto_f,
+                           quicksort_lomuto_iterative_f);
     }
 }
 
@@ -430,7 +441,8 @@ int main()
         generate(100'000),
         generate(1'000'000),
         generate(10'000'000),
-        generate(100'000'000)
+        generate(100'000'000),
+        //generate(1'000'000'000)
     };
 
     for (const auto& v : vs) {
