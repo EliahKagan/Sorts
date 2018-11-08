@@ -57,8 +57,11 @@ namespace {
 
     namespace detail {
         template<typename It>
+        using Delta = typename std::iterator_traits<It>::difference_type;
+
+        template<typename It>
         void insertion_sort_subsequence(const It first, const It last,
-                                        const typename std::iterator_traits<It>::difference_type gap)
+                                        const Delta<It> gap)
         {
             const auto len = last - first;
 
@@ -75,10 +78,10 @@ namespace {
 
         template<typename It>
         void shellsort(const It first, const It last,
-                       const std::vector<typename std::iterator_traits<It>::difference_type>& gaps)
+                       const std::vector<Delta<It>>& gaps)
         {
             std::for_each(std::crbegin(gaps), std::crend(gaps),
-                          [first, last](const typename std::iterator_traits<It>::difference_type gap) {
+                          [first, last](const Delta<It> gap) {
                 const auto bound = first + gap;
 
                 for (auto start = first; start != bound; ++start)
@@ -128,7 +131,7 @@ namespace {
 
         template<typename It>
         auto
-        make_aux(const typename std::iterator_traits<It>::difference_type len)
+        make_aux(const Delta<It> len)
         {
             using T = typename std::iterator_traits<It>::value_type;
 
@@ -214,13 +217,11 @@ namespace {
     template<typename It>
     void mergesort_bottomup_iterative(const It first, const It last)
     {
-        using Delta = typename std::iterator_traits<It>::difference_type;
-
         const auto len = std::distance(first, last);
         auto aux = detail::make_aux<It>(len);
 
-        for (Delta delta1 {1}; delta1 < len; delta1 *= 2) {
-            Delta sublen {0};
+        for (detail::Delta<It> delta1 {1}; delta1 < len; delta1 *= 2) {
+            detail::Delta<It> sublen {0};
 
             for (auto first1 = first; (sublen += delta1) < len; ) {
                 const auto first2 = std::next(first1, delta1);
