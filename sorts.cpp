@@ -116,6 +116,30 @@ namespace {
             }
         };
 
+        // Generates gaps consisting of the 3-smooth numbers. Pratt 1971 showed
+        // shellsort with this sequence has optimal worst-case asymptotic time
+        // complexity, http://www.dtic.mil/get-tr-doc/pdf?AD=AD0740110, but on
+        // average it is slower than the popular sequences. I generate them with
+        // David Eisenstat's method https://stackoverflow.com/a/25344494
+        // (Eisenstat 2014) based on Dijkstra's solution to the Hamming problem
+        // (Dijkstra 1976, see https://en.wikipedia.org/wiki/Regular_number).
+        inline constexpr auto three_smooth = [](const auto len, auto d_first) {
+            std::vector<std::remove_const_t<decltype(len)>> aux;
+            decltype(size(aux)) co_two_pos {}, co_three_pos {};
+
+            for (aux.push_back({1}); aux.back() < len; ) {
+                *d_first++ = aux.back();
+
+                const auto two_multiple = aux[co_two_pos] * 2;
+                const auto three_multiple = aux[co_three_pos] * 3;
+
+                aux.push_back(std::min(two_multiple, three_multiple));
+
+                if (two_multiple <= three_multiple) ++co_two_pos;
+                if (three_multiple <= two_multiple) ++co_three_pos;
+            }
+        };
+
         // Generates gaps that increase by a bit more than 9/4. Found by
         // Tokuda 1992: https://dl.acm.org/citation.cfm?id=659879. See also
         // https://oeis.org/A108870. The formula used here appears in
@@ -152,6 +176,12 @@ namespace {
     void shellsort_hibbard(const It first, const It last)
     {
         detail::shellsort(first, last, detail::gaps::hibbard);
+    }
+
+    template<typename It>
+    void shellsort_3smooth(const It first, const It last)
+    {
+        detail::shellsort(first, last, detail::gaps::three_smooth);
     }
 
     template<typename It>
@@ -428,6 +458,17 @@ namespace {
                 "Shellsort (Hibbard gap sequence)"};
     };
 
+    inline constexpr auto shellsort_3smooth_f = [](const auto first,
+                                                   const auto last) {
+        shellsort_3smooth(first, last);
+    };
+
+    template<>
+    struct Label<decltype(shellsort_3smooth_f)> {
+        static constexpr std::string_view value {
+                "Shellsort (3-smooth gap sequence)"};
+    };
+
     inline constexpr auto shellsort_tokuda_f = [](const auto first,
                                                   const auto last) {
         shellsort_tokuda(first, last);
@@ -608,6 +649,7 @@ namespace {
     void test_fast(const C& c)
     {
         test_algorithms(c, shellsort_hibbard_f,
+                           shellsort_3smooth_f,
                            shellsort_tokuda_f,
                            shellsort_quasi_ciura_f,
                            mergesort_topdown_f,
