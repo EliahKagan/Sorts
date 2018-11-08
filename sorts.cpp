@@ -79,7 +79,9 @@ namespace {
         void gapped_insertion_sort(It first, const It last,
                                    const typename It::difference_type gap)
         {
-            for (auto len = last - first; gap < len; ++first, --len) {
+            for (const auto stop = first + gap; first != stop; ++first) {
+                const auto len = last - first;
+
                 for (auto right = gap; right < len; right += gap) {
                     auto elem = std::move(first[right]);
 
@@ -97,11 +99,6 @@ namespace {
     void shellsort_tokuda(const It first, const It last)
     {
         const auto gaps = detail::tokuda_gaps(std::distance(first, last));
-
-        // FIXME: remove after debugging
-        std::cout << "Gaps:";
-        for (const auto gap : gaps) std::cout << ' ' << gap;
-        std::cout << '\n';
 
         std::for_each(std::crbegin(gaps), std::crend(gaps),
                       [first, last](const typename It::difference_type gap) {
