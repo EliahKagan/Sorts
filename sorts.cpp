@@ -29,6 +29,13 @@ namespace {
     }
 
     template<typename It>
+    void selection_sort(It first, const It last)
+    {
+        for (; first != last; ++first)
+            std::iter_swap(std::min_element(first, last), first);
+    }
+
+    template<typename It>
     void bubble_sort(const It first, const It last)
     {
         if (first == last) return;
@@ -279,6 +286,16 @@ namespace {
         static constexpr std::string_view value {"Insertion sort"};
     };
 
+    inline constexpr auto selection_sort_f = [](const auto first,
+                                                const auto last) {
+        selection_sort(first, last);
+    };
+
+    template<>
+    struct Label<decltype(selection_sort_f)> {
+        static constexpr std::string_view value {"Selection sort"};
+    };
+
     inline constexpr auto bubble_sort_f = [](const auto first,
                                              const auto last) {
         bubble_sort(first, last);
@@ -439,6 +456,7 @@ namespace {
     void test_slow(const C& c)
     {
         test_algorithms(c, insertion_sort_f,
+                           selection_sort_f,
                            bubble_sort_f);
     }
 
