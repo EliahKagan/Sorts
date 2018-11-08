@@ -76,10 +76,15 @@ namespace {
             }
         }
 
-        template<typename It>
-        void shellsort(const It first, const It last,
-                       const std::vector<Delta<It>>& gaps)
+        template<typename It, typename Gen>
+        void shellsort(const It first, const It last, const Gen generate_gaps)
         {
+            // Get the gap sequence.
+            std::vector<Delta<It>> gaps;
+            generate_gaps(last - first, std::back_inserter(gaps));
+            assert(empty(gaps) || gaps.front() == 1);
+
+            // Do all nonoverlapping gapped insertion sorts for all gap values.
             std::for_each(std::crbegin(gaps), std::crend(gaps),
                           [first, last](const Delta<It> gap) {
                 const auto bound = first + gap;
@@ -88,31 +93,24 @@ namespace {
                     insertion_sort_subsequence(start, last, gap);
             });
         }
+    }
 
+    namespace detail::gaps {
         // Generates the Tokuda gap sequence. See https://oeis.org/A108870 and
         // formulas at https://en.wikipedia.org/wiki/Shellsort#Gap_sequences.
-        template<typename D>
-        std::vector<D> tokuda_gaps(const D len)
-        {
-            static_assert(std::is_integral_v<D> && std::is_signed_v<D>);
-
-            std::vector<D> gaps;
-
+        inline constexpr auto tokuda = [](const auto len, auto d_first) {
             for (auto h = 1.0; ; h = h * 2.25 + 1.0) {
-                const auto g = static_cast<D>(std::ceil(h));
+                const auto g = static_cast<decltype(len)>(std::ceil(h));
                 if (g >= len) break;
-                gaps.push_back(g);
+                *d_first++ = g;
             }
-
-            assert(empty(gaps) || gaps.front() == 1);
-            return gaps;
-        }
+        };
     }
 
     template<typename It>
     void shellsort_tokuda(const It first, const It last)
     {
-        detail::shellsort(first, last, detail::tokuda_gaps(last - first));
+        detail::shellsort(first, last, detail::gaps::tokuda);
     }
 
     namespace detail {
