@@ -2,6 +2,8 @@
 #include <cstddef>
 #include <iostream>
 #include <iterator>
+#include <limits>
+#include <random>
 #include <stack>
 #include <string_view>
 #include <tuple>
@@ -128,6 +130,7 @@ namespace {
                 first = first2;
                 last = last2;
             } else {
+                // Merge the left and right branches and retreat.
                 detail::merge(aux, first1, first2, last2);
                 post_first = first1;
                 post_last = last2;
@@ -376,14 +379,28 @@ namespace {
 
 int main()
 {
-    std::vector<std::vector<int>> vs {
+    using Range = std::numeric_limits<int>;
+    using Dist = std::uniform_int_distribution<int>;
+
+    auto generate = [eng = std::mt19937{std::random_device{}()},
+                     dist = Dist{Range::min(), Range::max()}
+            ](const std::size_t len) mutable {
+        std::vector<int> a (len);
+        for (auto& x : a) x = dist(eng);
+        return a;
+    };
+
+    const std::vector<std::vector<int>> vs {
         {111, 333, 222},
         {3, 7, 1, 5, 2, -6, 15, 4, 33, -5},
         {9, 9, 1, 8, 3, 0, 2, 0, 7, 15, 4, 3, 3},
         {2, 1},
         {1, 2},
         {5},
-        {}
+        {},
+        generate(6),
+        generate(1000),
+        generate(10'000)
     };
 
     for (const auto& v : vs) {
