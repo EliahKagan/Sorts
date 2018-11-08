@@ -346,6 +346,28 @@ namespace {
                 "Quicksort (Lomuto partitioning, iterative)"};
     };
 
+    inline constexpr auto stdlib_mergesort_f = [](const auto first,
+                                                  const auto last) {
+        std::stable_sort(first, last);
+    };
+
+    template<>
+    struct Label<decltype(stdlib_mergesort_f)> {
+        static constexpr std::string_view value {
+                "std::stable_sort (usually adaptive mergesort)"};
+    };
+
+    inline constexpr auto stdlib_introsort_f = [](const auto first,
+                                                  const auto last) {
+        std::sort(first, last);
+    };
+
+    template<>
+    struct Label<decltype(stdlib_introsort_f)> {
+        static constexpr std::string_view value {
+                "std::sort (usually introsort)"};
+    };
+
     template<typename C>
     void print(const C& c, const std::string_view prefix = " ")
     {
@@ -410,7 +432,9 @@ namespace {
                            mergesort_bottomup_iterative_f,
                            heapsort_f,
                            quicksort_lomuto_f,
-                           quicksort_lomuto_iterative_f);
+                           quicksort_lomuto_iterative_f,
+                           stdlib_mergesort_f,
+                           stdlib_introsort_f);
     }
 }
 
