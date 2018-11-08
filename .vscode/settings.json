@@ -43,6 +43,9 @@
         "xtr1common": "cpp",
         "xutility": "cpp",
         "random": "cpp",
-        "ratio": "cpp"
+        "ratio": "cpp",
+        "chrono": "cpp",
+        "numeric": "cpp",
+        "queue": "cpp"
     }
 }

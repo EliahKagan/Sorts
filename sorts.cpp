@@ -1,5 +1,7 @@
 #include <algorithm>
+#include <cassert>
 #include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <iostream>
 #include <iterator>
@@ -22,7 +24,7 @@ namespace {
 
             auto left = right;
             for (; left != first && elem < *std::prev(left); --left)
-                *left = *std::prev(left);
+                *left = std::move(*std::prev(left));
 
             *left = std::move(elem);
         }
@@ -51,6 +53,55 @@ namespace {
                 }
             }
         }
+    }
+
+    namespace detail {
+        // Generates the Tokuda gap sequence. See https://oeis.org/A108870 and
+        // formulas at https://en.wikipedia.org/wiki/Shellsort#Gap_sequences.
+        template<typename D>
+        std::vector<D> tokuda_gaps(const D len)
+        {
+            static_assert(std::is_integral_v<D> && std::is_signed_v<D>);
+
+            std::vector<D> gaps;
+
+            for (auto h = 1.0; ; h = h * 2.25 + 1.0) {
+                const auto g = static_cast<D>(std::ceil(h));
+                if (g >= len) break;
+                gaps.push_back(g);
+            }
+
+            assert(empty(gaps) || gaps.front() == 1);
+            return gaps;
+        }
+
+        template<typename It>
+        void gapped_insertion_sort(It first, const It last,
+                                   const typename It::difference_type gap)
+        {
+            for (auto len = last - first; gap < len; ++first, --len) {
+                for (auto right = gap; right < len; right += gap) {
+                    auto elem = std::move(first[right]);
+
+                    auto left = right;
+                    for (; left != 0 && elem < first[left - gap]; left -= gap)
+                        first[left] = std::move(first[left - gap]);
+
+                    first[left] = std::move(elem);
+                }
+            }
+        }
+    }
+
+    template<typename It>
+    void shellsort_tokuda(const It first, const It last)
+    {
+        const auto gaps = detail::tokuda_gaps(std::distance(first, last));
+
+        std::for_each(std::crbegin(gaps), std::crend(gaps),
+                      [first, last](const typename It::difference_type gap) {
+            detail::gapped_insertion_sort(first, last, gap);
+        });
     }
 
     namespace detail {
@@ -306,6 +357,17 @@ namespace {
         static constexpr std::string_view value {"Bubble sort"};
     };
 
+    inline constexpr auto shellsort_tokuda_f = [](const auto first,
+                                                  const auto last) {
+        shellsort_tokuda(first, last);
+    };
+
+    template<>
+    struct Label<decltype(shellsort_tokuda_f)> {
+        static constexpr std::string_view value {
+                "Shellsort (Tokuda gap sequence)"};
+    };
+
     inline constexpr auto mergesort_topdown_f = [](const auto first,
                                                    const auto last) {
         mergesort_topdown(first, last);
@@ -463,7 +525,8 @@ namespace {
     template<typename C>
     void test_fast(const C& c)
     {
-        test_algorithms(c, mergesort_topdown_f,
+        test_algorithms(c, shellsort_tokuda_f,
+                           mergesort_topdown_f,
                            mergesort_topdown_iterative_f,
                            mergesort_bottomup_iterative_f,
                            heapsort_f,
