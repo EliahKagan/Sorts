@@ -98,6 +98,11 @@ namespace {
     {
         const auto gaps = detail::tokuda_gaps(std::distance(first, last));
 
+        // FIXME: remove after debugging
+        std::cout << "Gaps:";
+        for (const auto gap : gaps) std::cout << ' ' << gap;
+        std::cout << '\n';
+
         std::for_each(std::crbegin(gaps), std::crend(gaps),
                       [first, last](const typename It::difference_type gap) {
             detail::gapped_insertion_sort(first, last, gap);
