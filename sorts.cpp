@@ -68,7 +68,7 @@ namespace {
                 ++cur;
             }
 
-            // Move the remaining elements from whicever range has them.
+            // Move the remaining elements from whichever range has them.
             std::move(cur1, first2, back_inserter(aux));
             std::move(cur2, last2, back_inserter(aux));
 
@@ -79,7 +79,7 @@ namespace {
     }
 
     template<typename It>
-    void mergesort(const It first, const It last)
+    void mergesort_topdown(const It first, const It last)
     {
         auto aux = detail::make_aux<It>(std::distance(first, last));
 
@@ -88,7 +88,7 @@ namespace {
             const auto delta = std::distance(first1, last2) / 2;
             if (delta == 0) return;
 
-            const auto first2 = first1 + delta;
+            const auto first2 = std::next(first1, delta);
             me(me, first1, first2);
             me(me, first2, last2);
             detail::merge(aux, first1, first2, last2);
@@ -97,8 +97,47 @@ namespace {
         mergesort_subrange(mergesort_subrange, first, last);
     }
 
+    namespace detail {
+        template<typename It>
+        inline It midpoint(const It first, const It last) noexcept
+        {
+            return std::next(first, std::distance(first, last) / 2);
+        }
+    }
+
     template<typename It>
-    void mergesort_iterative(const It first, const It last)
+    void mergesort_topdown_iterative(It first, It last)
+    {
+        auto aux = detail::make_aux<It>(std::distance(first, last));
+        auto post_first = last, post_last = last; // a "null" interval
+        std::stack<std::tuple<It, It>> intervals;
+
+        while (first != last || !empty(intervals)) {
+            // Traverse left as far as possible.
+            for (; first != last; last = detail::midpoint(first, last))
+                intervals.emplace(first, last);
+
+            const auto [first1, last2] = intervals.top();
+
+            if (const auto first2 = detail::midpoint(first1, last2);
+                    // The right branch is non-empty, and...
+                    first2 != last2 &&
+                    // we were not just there.
+                    (first2 != post_first || last2 != post_last)) {
+                // Traverse there next.
+                first = first2;
+                last = last2;
+            } else {
+                detail::merge(aux, first1, first2, last2);
+                post_first = first1;
+                post_last = last2;
+                intervals.pop();
+            }
+        }
+    }
+
+    template<typename It>
+    void mergesort_bottomup_iterative(const It first, const It last)
     {
         using Delta = typename std::iterator_traits<It>::difference_type;
 
@@ -231,23 +270,35 @@ namespace {
         static constexpr std::string_view value {"Bubble sort"};
     };
 
-    inline constexpr auto mergesort_f = [](const auto first, const auto last) {
-        mergesort(first, last);
+    inline constexpr auto mergesort_topdown_f = [](const auto first,
+                                                   const auto last) {
+        mergesort_topdown(first, last);
     };
 
     template<>
-    struct Label<decltype(mergesort_f)> {
+    struct Label<decltype(mergesort_topdown_f)> {
         static constexpr std::string_view value {
-                "Mergesort (top-down, recursive"};
+                "Mergesort (top-down, recursive)"};
     };
 
-    inline constexpr auto mergesort_iterative_f = [](const auto first,
-                                                     const auto last) {
-        mergesort_iterative(first, last);
+    inline constexpr auto mergesort_topdown_iterative_f = [](const auto first,
+                                                             const auto last) {
+        mergesort_topdown_iterative(first, last);
     };
 
     template<>
-    struct Label<decltype(mergesort_iterative_f)> {
+    struct Label<decltype(mergesort_topdown_iterative_f)> {
+        static constexpr std::string_view value {
+            "Mergesort (top-down, iterative)"};
+    };
+
+    inline constexpr auto mergesort_bottomup_iterative_f = [](const auto first,
+                                                              const auto last) {
+        mergesort_bottomup_iterative(first, last);
+    };
+
+    template<>
+    struct Label<decltype(mergesort_bottomup_iterative_f)> {
         static constexpr std::string_view value {
                 "Mergesort (bottom-up, iterative)"};
     };
@@ -341,8 +392,9 @@ int main()
 
         test(v, insertion_sort_f,
                 bubble_sort_f,
-                mergesort_f,
-                mergesort_iterative_f,
+                mergesort_topdown_f,
+                mergesort_topdown_iterative_f,
+                mergesort_bottomup_iterative_f,
                 heapsort_f,
                 quicksort_f,
                 quicksort_iterative_f);
