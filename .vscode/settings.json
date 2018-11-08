@@ -46,6 +46,7 @@
         "ratio": "cpp",
         "chrono": "cpp",
         "numeric": "cpp",
-        "queue": "cpp"
+        "queue": "cpp",
+        "array": "cpp"
     }
 }

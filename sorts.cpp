@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <chrono>
 #include <cmath>
@@ -93,6 +94,15 @@ namespace {
                     insertion_sort_subsequence(start, last, gap);
             });
         }
+
+        // This ratio appears in the computations of some of the experimentally
+        // faster (average-case) gap sequences for shellsort.
+        inline constexpr auto nine_fourths = 2.25;
+
+        // This is the fastest known sequence in the average case, based on
+        // experimental evidence. Only nine terms are known (with no formula).
+        inline constexpr std::array ciura_gaps = {
+                1, 4, 10, 23, 57, 132, 301, 701, 1750};
     }
 
     namespace detail::gaps {
@@ -111,12 +121,37 @@ namespace {
         // https://oeis.org/A108870. The formula used here appears in
         // https://en.wikipedia.org/wiki/Shellsort#Gap_sequences.
         inline constexpr auto tokuda = [](const auto len, auto d_first) {
-            for (auto h = 1.0; ; h = h * 2.25 + 1.0) {
+            for (auto h = 1.0; ; h = h * nine_fourths + 1.0) {
                 const auto g = static_cast<decltype(len)>(std::ceil(h));
                 if (g >= len) break;
                 *d_first++ = g;
             }
         };
+
+        // Generates gaps that increase according to the short experimentally
+        // derived sequence in Ciura 2001, and then by a bit less than 9/4. See
+        // http://sun.aei.polsl.pl/~mciura/publikacje/shellsort.pdf and
+        // https://oeis.org/A102549 for the initial sequence and
+        // https://en.wikipedia.org/wiki/Shellsort#Gap_sequences for the
+        // idea of extending it in this way.
+        inline constexpr auto quasi_ciura = [](const auto len, auto d_first) {
+            auto g = decltype(len){};
+
+            for (const auto h : ciura_gaps) {
+                g = decltype(len){h};
+                if (g >= len) return;
+                *d_first++ = g;
+            }
+
+            while ((g = static_cast<decltype(len)>(g * nine_fourths)) < len)
+                *d_first++ = g;
+        };
+    }
+
+    template<typename It>
+    void shellsort_hibbard(const It first, const It last)
+    {
+        detail::shellsort(first, last, detail::gaps::hibbard);
     }
 
     template<typename It>
@@ -126,9 +161,9 @@ namespace {
     }
 
     template<typename It>
-    void shellsort_hibbard(const It first, const It last)
+    void shellsort_quasi_ciura(const It first, const It last)
     {
-        detail::shellsort(first, last, detail::gaps::hibbard);
+        detail::shellsort(first, last, detail::gaps::quasi_ciura);
     }
 
     namespace detail {
@@ -404,7 +439,17 @@ namespace {
                 "Shellsort (Tokuda gap sequence)"};
     };
 
-    ///
+    inline constexpr auto shellsort_quasi_ciura_f = [](const auto first,
+                                                       const auto last) {
+        shellsort_quasi_ciura(first, last);
+    };
+
+    template<>
+    struct Label<decltype(shellsort_quasi_ciura_f)> {
+        static constexpr std::string_view value {
+                "Shellsort (Extended Ciura gap sequence)"};
+    };
+
     inline constexpr auto mergesort_topdown_f = [](const auto first,
                                                    const auto last) {
         mergesort_topdown(first, last);
@@ -564,6 +609,7 @@ namespace {
     {
         test_algorithms(c, shellsort_hibbard_f,
                            shellsort_tokuda_f,
+                           shellsort_quasi_ciura_f,
                            mergesort_topdown_f,
                            mergesort_topdown_iterative_f,
                            mergesort_bottomup_iterative_f,
