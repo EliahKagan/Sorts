@@ -96,8 +96,20 @@ namespace {
     }
 
     namespace detail::gaps {
-        // Generates the Tokuda gap sequence. See https://oeis.org/A108870 and
-        // formulas at https://en.wikipedia.org/wiki/Shellsort#Gap_sequences.
+        // Generates gaps consisting of one less than powers of 2. Found by
+        // Hibbard 1963: https://dl.acm.org/citation.cfm?doid=366552.366557
+        inline constexpr auto hibbard = [](const auto len, auto d_first) {
+            for (auto k = 1; ; ++k) {
+                const auto g = (decltype(len){1} << k) - 1;
+                if (g >= len) break;
+                *d_first++ = g;
+            }
+        };
+
+        // Generates gaps that increase by a bit more than 9/4. Found by
+        // Tokuda 1992: https://dl.acm.org/citation.cfm?id=659879. See also
+        // https://oeis.org/A108870. The formula used here appears in
+        // https://en.wikipedia.org/wiki/Shellsort#Gap_sequences.
         inline constexpr auto tokuda = [](const auto len, auto d_first) {
             for (auto h = 1.0; ; h = h * 2.25 + 1.0) {
                 const auto g = static_cast<decltype(len)>(std::ceil(h));
@@ -111,6 +123,12 @@ namespace {
     void shellsort_tokuda(const It first, const It last)
     {
         detail::shellsort(first, last, detail::gaps::tokuda);
+    }
+
+    template<typename It>
+    void shellsort_hibbard(const It first, const It last)
+    {
+        detail::shellsort(first, last, detail::gaps::hibbard);
     }
 
     namespace detail {
@@ -364,6 +382,17 @@ namespace {
         static constexpr std::string_view value {"Bubble sort"};
     };
 
+    inline constexpr auto shellsort_hibbard_f = [](const auto first,
+                                                   const auto last) {
+        shellsort_hibbard(first, last);
+    };
+
+    template<>
+    struct Label<decltype(shellsort_hibbard_f)> {
+        static constexpr std::string_view value {
+                "Shellsort (Hibbard gap sequence)"};
+    };
+
     inline constexpr auto shellsort_tokuda_f = [](const auto first,
                                                   const auto last) {
         shellsort_tokuda(first, last);
@@ -375,6 +404,7 @@ namespace {
                 "Shellsort (Tokuda gap sequence)"};
     };
 
+    ///
     inline constexpr auto mergesort_topdown_f = [](const auto first,
                                                    const auto last) {
         mergesort_topdown(first, last);
@@ -532,7 +562,8 @@ namespace {
     template<typename C>
     void test_fast(const C& c)
     {
-        test_algorithms(c, shellsort_tokuda_f,
+        test_algorithms(c, shellsort_hibbard_f,
+                           shellsort_tokuda_f,
                            mergesort_topdown_f,
                            mergesort_topdown_iterative_f,
                            mergesort_bottomup_iterative_f,
