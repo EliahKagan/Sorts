@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <chrono>
 #include <cstddef>
 #include <iostream>
 #include <iterator>
@@ -204,7 +205,7 @@ namespace {
     }
 
     template<typename It>
-    void quicksort(const It first, const It last) // c.f K&R 2 impl. (p. 87)
+    void quicksort(const It first, const It last) // c.f. K&R 2 impl. (p. 87)
     {
         const auto len = std::distance(first, last);
         if (len < 2) return;
@@ -359,10 +360,17 @@ namespace {
     template<typename C, typename F>
     void test_one(C c, const F f)
     {
+        using namespace std::chrono;
+        using std::begin, std::end, std::cbegin, std::cend;
+
         std::cout << label_v<F> << ':' << std::flush;
 
-        using std::begin, std::end, std::cbegin, std::cend;
+        const auto ti = steady_clock::now();
         f(begin(c), end(c));
+        const auto tf = steady_clock::now();
+
+        const auto dt = duration_cast<milliseconds>(tf - ti);
+        std::cout << ' ' << dt.count() << "ms";
 
         print_if_small(c);
 
@@ -374,6 +382,24 @@ namespace {
     void test(const C& c, const Fs... fs)
     {
         (..., test_one(c, fs));
+    }
+
+    template<typename C>
+    void test_slow(const C& c)
+    {
+        test(c, insertion_sort_f,
+                bubble_sort_f);
+    }
+
+    template<typename C>
+    void test_fast(const C& c)
+    {
+        test(c, mergesort_topdown_f,
+                mergesort_topdown_iterative_f,
+                mergesort_bottomup_iterative_f,
+                heapsort_f,
+                quicksort_f,
+                quicksort_iterative_f);
     }
 }
 
@@ -400,7 +426,11 @@ int main()
         {},
         generate(6),
         generate(1000),
-        generate(10'000)
+        generate(10'000),
+        generate(100'000),
+        generate(1'000'000),
+        generate(10'000'000),
+        generate(100'000'000)
     };
 
     for (const auto& v : vs) {
@@ -408,14 +438,8 @@ int main()
         print_if_small(v);
         std::cout << ".\n";
 
-        test(v, insertion_sort_f,
-                bubble_sort_f,
-                mergesort_topdown_f,
-                mergesort_topdown_iterative_f,
-                mergesort_bottomup_iterative_f,
-                heapsort_f,
-                quicksort_f,
-                quicksort_iterative_f);
+        if (size(v) <= 100'000) test_slow(v);
+        test_fast(v);
 
         std::cout << '\n';
     }
