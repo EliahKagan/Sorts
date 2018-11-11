@@ -388,17 +388,27 @@ namespace {
         }
 
         template<typename It>
-        constexpr void bring_median_of_three_to_front(const It first, It last)
+        constexpr It iter_min(const It p, const It q)
         {
-            const auto mid = midpoint(first, last);
-            if (mid == --last) return;
+            return *q < *p ? q : p;
+        }
 
-            // Make mid point to the lowest value.
-            const auto maybe_lowest = *last < *first ? last : first;
-            if (*maybe_lowest < *mid) std::iter_swap(maybe_lowest, mid);
+        template<typename It>
+        constexpr It median_of_three(const It p, const It q, const It r)
+        {
+            if (*p < *q)
+                return *p < *r ? iter_min(q, r) : p;
+            else
+                return *q < *r ? iter_min(p, r) : q;
+        }
 
-            // Make last point to the highest value.
-            if (*last < *mid) std::iter_swap(last, mid);
+        template<typename It>
+        constexpr void bring_median_of_three_to_front(const It first,
+                                                      const It last)
+        {
+            std::iter_swap(first, median_of_three(first,
+                                                  midpoint(first, last),
+                                                  last - 1));
         }
     }
 
