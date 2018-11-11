@@ -436,9 +436,9 @@ namespace {
         It hoare(It first, It last)
         {
             for (const auto& pivot = *first; ; ) {
-                while (first < last && *++first < pivot) { }
-                while (first < last && pivot < *--last) { }
-                if (first >= last) return last;
+                while (/*first < last &&*/ *++first < pivot) { }
+                while (/*first < last &&*/ pivot < *--last) { }
+                if (first >= last) return first;
                 std::iter_swap(first, last);
             }
         }
