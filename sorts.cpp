@@ -86,7 +86,7 @@ namespace {
             generate_gaps(last - first, std::back_inserter(gaps));
             assert(empty(gaps) || gaps.front() == 1);
 
-            // Do all nonoverlapping gapped insertion sorts for all gap values.
+            // Do all nonoverlapping gapped insertion sorts for each gap value.
             std::for_each(std::crbegin(gaps), std::crend(gaps),
                           [first, last](const Delta<It> gap) {
                 const auto bound = first + gap;
@@ -141,6 +141,22 @@ namespace {
             }
         };
 
+        // Generate gaps whose rate of increase gradually rises. Found by
+        // Sedgewick 1986: https://doi.org/10.1016/0196-6774(86)90001-5 p.165
+        // See also https://oeis.org/A036562.
+        inline constexpr auto sedgewick = [](const auto len, auto d_first) {
+            if (len == 0) return;
+
+            constexpr decltype(len) one {1};
+            *d_first++ = one;
+
+            for (auto i = 0; ; ++i) {
+                const auto g = (one << (i + 1) * 2) + (one << i) * 3 + 1;
+                if (g >= len) break;
+                *d_first++ = g;
+            }
+        };
+
         // Generates gaps that increase by a bit more than 9/4. Found by
         // Tokuda 1992: https://dl.acm.org/citation.cfm?id=659879. See also
         // https://oeis.org/A108870. The formula used here appears in
@@ -183,6 +199,12 @@ namespace {
     void shellsort_3smooth(const It first, const It last)
     {
         detail::shellsort(first, last, detail::gaps::three_smooth);
+    }
+
+    template<typename It>
+    void shellsort_sedgewick(const It first, const It last)
+    {
+        detail::shellsort(first, last, detail::gaps::sedgewick);
     }
 
     template<typename It>
@@ -470,6 +492,17 @@ namespace {
                 "Shellsort (3-smooth gap sequence)"};
     };
 
+    inline constexpr auto shellsort_sedgewick_f = [](const auto first,
+                                                     const auto last) {
+        shellsort_sedgewick(first, last);
+    };
+
+    template<>
+    struct Label<decltype(shellsort_sedgewick_f)> {
+        static constexpr std::string_view value {
+                "Shellsort (Sedgewick gap sequence)"};
+    };
+
     inline constexpr auto shellsort_tokuda_f = [](const auto first,
                                                   const auto last) {
         shellsort_tokuda(first, last);
@@ -651,6 +684,7 @@ namespace {
     {
         test_algorithms(c, shellsort_hibbard_f,
                            shellsort_3smooth_f,
+                           shellsort_sedgewick_f,
                            shellsort_tokuda_f,
                            shellsort_quasi_ciura_f,
                            mergesort_topdown_f,
