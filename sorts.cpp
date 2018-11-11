@@ -435,12 +435,9 @@ namespace {
         template<typename It>
         It hoare(It first, It last)
         {
-            //std::for_each(first, last, [](const auto& x) { std::cout << ' ' << x; });
-            //std::cout << ".\n";
-
             for (const auto& pivot = *first; ; ) {
-                while (/*first < last &&*/ *++first < pivot) { }
-                while (/*first < last &&*/ pivot < *--last) { }
+                while (first < last && *++first < pivot) { }
+                while (first < last && pivot < *--last) { }
                 if (first >= last) return last;
                 std::iter_swap(first, last);
             }
@@ -534,12 +531,9 @@ namespace {
 
         //std::cout << last - first << '\n'; // FIXME: remove after debugging
         detail::bring_median_of_three_to_front(first, last);
-        assert(*std::min_element(first + 1, last) <= *first);
-        assert(*std::max_element(first + 1, last) >= *first);
         auto mid = detail::partitions::hoare(first, last);
 
         //++mid;
-        assert(mid != last);
         quicksort_hoare(first, mid);
         quicksort_hoare(mid, last);
     }
