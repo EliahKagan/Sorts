@@ -463,6 +463,7 @@ namespace {
         }
     }
 
+    // Same as quicksort_lomuto_simple, but implemented iteratively.
     template<typename It>
     void quicksort_lomuto_simple_iterative(It first, It last)
     {
@@ -476,6 +477,41 @@ namespace {
             if (!detail::possibly_unsorted(first, last)) continue;
 
             detail::bring_mid_to_front(first, last);
+            const auto mid = detail::partitions::lomuto(first, last);
+
+            intervals.emplace(std::next(mid), last);
+            intervals.emplace(first, mid);
+        }
+    }
+
+    // Quicksort, using Lomuto partition but choosing the pivot via the median-
+    // of-three tecdhnique.
+    template<typename It>
+    void quicksort_lomuto(const It first, const It last)
+    {
+        if (detail::possibly_unsorted(first, last)) {
+            detail::bring_median_of_three_to_front(first, last);
+            auto mid = detail::partitions::lomuto(first, last);
+
+            quicksort_lomuto_simple(first, mid);
+            quicksort_lomuto_simple(++mid, last);
+        }
+    }
+
+    // Same as quicksort_lomuto, but implemented iteratively.
+    template<typename It>
+    void quicksort_lomuto_iterative(It first, It last)
+    {
+        std::stack<std::tuple<It, It>> intervals;
+        intervals.emplace(first, last);
+
+        while (!empty(intervals)) {
+            std::tie(first, last) = intervals.top();
+            intervals.pop();
+
+            if (!detail::possibly_unsorted(first, last)) continue;
+
+            detail::bring_median_of_three_to_front(first, last);
             const auto mid = detail::partitions::lomuto(first, last);
 
             intervals.emplace(std::next(mid), last);
@@ -631,7 +667,8 @@ namespace {
     template<>
     struct Label<decltype(quicksort_lomuto_simple_f)> {
         static constexpr std::string_view value {
-                "Quicksort (Lomuto partitioning, recursive)"};
+            "Quicksort "
+            "(Lomuto partitioning, middle-element pivot, recursive)"};
     };
 
     inline constexpr auto quicksort_lomuto_simple_iterative_f =
@@ -642,7 +679,34 @@ namespace {
     template<>
     struct Label<decltype(quicksort_lomuto_simple_iterative_f)> {
         static constexpr std::string_view value {
-                "Quicksort (Lomuto partitioning, iterative)"};
+            "Quicksort "
+            "(Lomuto partitioning, middle-element pivot, iterative)"};
+    };
+
+    inline constexpr auto quicksort_lomuto_f = [](const auto first,
+                                                  const auto last) {
+        quicksort_lomuto(first, last);
+    };
+
+    template<>
+    struct Label<decltype(quicksort_lomuto_f)> {
+        static constexpr std::string_view value {
+            "Quicksort "
+            "(Lomuto partitioning, median-of-three pivot, recursive)"
+        };
+    };
+
+    inline constexpr auto quicksort_lomuto_iterative_f = [](const auto first,
+                                                            const auto last) {
+        quicksort_lomuto_iterative(first, last);
+    };
+
+    template<>
+    struct Label<decltype(quicksort_lomuto_iterative_f)> {
+        static constexpr std::string_view value {
+            "Quicksort "
+            "(Lomuto partitioning, median-of-three pivot, iterative)"
+        };
     };
 
     inline constexpr auto stdlib_heapsort_f = [](const auto first,
@@ -749,6 +813,8 @@ namespace {
                            heapsort_f,
                            quicksort_lomuto_simple_f,
                            quicksort_lomuto_simple_iterative_f,
+                           quicksort_lomuto_f,
+                           quicksort_lomuto_iterative_f,
                            stdlib_heapsort_f,
                            stdlib_mergesort_f,
                            stdlib_introsort_f);
