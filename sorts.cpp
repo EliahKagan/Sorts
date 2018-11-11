@@ -436,8 +436,8 @@ namespace {
         It hoare(It first, It last)
         {
             for (const auto& pivot = *first; ; ) {
-                while (/*first < last &&*/ *++first < pivot) { }
-                while (/*first < last &&*/ pivot < *--last) { }
+                while (*++first < pivot) { }
+                while (pivot < *--last) { }
                 if (first >= last) return first;
                 std::iter_swap(first, last);
             }
@@ -453,7 +453,6 @@ namespace {
         if (detail::possibly_unsorted(first, last)) {
             detail::bring_mid_to_front(first, last);
             auto mid = detail::partitions::lomuto(first, last);
-
             quicksort_lomuto_simple(first, mid);
             quicksort_lomuto_simple(++mid, last);
         }
@@ -492,7 +491,6 @@ namespace {
 
         detail::bring_median_of_three_to_front(first, last);
         auto mid = detail::partitions::lomuto(first, last);
-
         quicksort_lomuto(first, mid);
         quicksort_lomuto(++mid, last);
     }
@@ -515,12 +513,12 @@ namespace {
 
             detail::bring_median_of_three_to_front(first, last);
             const auto mid = detail::partitions::lomuto(first, last);
-
             intervals.emplace(mid + 1, last);
             intervals.emplace(first, mid);
         }
     }
 
+    // Quicksort using Hoare partition.
     template<typename It>
     void quicksort_hoare(const It first, It last)
     {
@@ -529,11 +527,8 @@ namespace {
             return;
         }
 
-        //std::cout << last - first << '\n'; // FIXME: remove after debugging
         detail::bring_median_of_three_to_front(first, last);
         auto mid = detail::partitions::hoare(first, last);
-
-        //++mid;
         quicksort_hoare(first, mid);
         quicksort_hoare(mid, last);
     }
@@ -735,7 +730,7 @@ namespace {
     struct Label<decltype(quicksort_hoare_f)> {
         static constexpr std::string_view value {
             "Quicksort "
-            "(Hoare partitioning, median-of-three pivot, recursive"};
+            "(Hoare partitioning, median-of-three pivot, recursive)"};
     };
 
     inline constexpr auto stdlib_heapsort_f = [](const auto first,
