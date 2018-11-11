@@ -429,23 +429,19 @@ namespace {
             return mid;
         }
 
-#if false
-        // Hoare partition scheme. This implementation assumes there are at
+        // Hoare partition scheme. This implementation assumes the first element
+        // in the range is neither the strictly least nor the strictly greatest
+        // element.
         template<typename It>
-        It hoare(const It first, It last)
+        It hoare(It first, It last)
         {
-            std::iter_swap(first, midpoint(first, last));
-            const auto& pivot = *first;
-
-            for (; ; ) {
-                while (*++first < pivot && first != last) { }
-                while (pivot < *--last & first != last) { }
-                if (first >= last) break;
-                std::iter_swap(mid, last);
+            for (const auto& pivot = *first; ; ) {
+                while (first < last && *++first < pivot) { }
+                while (first < last && pivot < *--last) { }
+                if (first >= last) return last;
+                std::iter_swap(first, last);
             }
-
         }
-#endif
     }
 
     // Quicksort, using Lomuto partition but choosing the pivot from the middle
@@ -487,15 +483,18 @@ namespace {
     // Quicksort, using Lomuto partition but choosing the pivot via the median-
     // of-three tecdhnique.
     template<typename It>
-    void quicksort_lomuto(const It first, const It last)
+    void quicksort_lomuto(const It first, It last)
     {
-        if (detail::possibly_unsorted(first, last)) {
-            detail::bring_median_of_three_to_front(first, last);
-            auto mid = detail::partitions::lomuto(first, last);
-
-            quicksort_lomuto_simple(first, mid);
-            quicksort_lomuto_simple(++mid, last);
+        if (const auto len = last - first; len < 3) {
+            if (len == 2 && *--last < *first) std::iter_swap(first, last);
+            return;
         }
+
+        detail::bring_median_of_three_to_front(first, last);
+        auto mid = detail::partitions::lomuto(first, last);
+
+        quicksort_lomuto(first, mid);
+        quicksort_lomuto(++mid, last);
     }
 
     // Same as quicksort_lomuto, but implemented iteratively.
@@ -509,14 +508,34 @@ namespace {
             std::tie(first, last) = intervals.top();
             intervals.pop();
 
-            if (!detail::possibly_unsorted(first, last)) continue;
+            if (const auto len = last - first; len < 3) {
+                if (len == 2 && *--last < *first) std::iter_swap(first, last);
+                continue;
+            }
 
             detail::bring_median_of_three_to_front(first, last);
             const auto mid = detail::partitions::lomuto(first, last);
 
-            intervals.emplace(std::next(mid), last);
+            intervals.emplace(mid + 1, last);
             intervals.emplace(first, mid);
         }
+    }
+
+    template<typename It>
+    void quicksort_hoare(const It first, It last)
+    {
+        if (const auto len = last - first; len < 3) {
+            if (len == 2 && *--last < *first) std::iter_swap(first, last);
+            return;
+        }
+
+        //std::cout << last - first << '\n'; // FIXME: remove after debugging
+        detail::bring_median_of_three_to_front(first, last);
+        auto mid = detail::partitions::hoare(first, last);
+
+        //++mid;
+        quicksort_hoare(first, mid);
+        quicksort_hoare(mid, last);
     }
 
     template<typename It>
@@ -692,8 +711,7 @@ namespace {
     struct Label<decltype(quicksort_lomuto_f)> {
         static constexpr std::string_view value {
             "Quicksort "
-            "(Lomuto partitioning, median-of-three pivot, recursive)"
-        };
+            "(Lomuto partitioning, median-of-three pivot, recursive)"};
     };
 
     inline constexpr auto quicksort_lomuto_iterative_f = [](const auto first,
@@ -705,8 +723,19 @@ namespace {
     struct Label<decltype(quicksort_lomuto_iterative_f)> {
         static constexpr std::string_view value {
             "Quicksort "
-            "(Lomuto partitioning, median-of-three pivot, iterative)"
-        };
+            "(Lomuto partitioning, median-of-three pivot, iterative)"};
+    };
+
+    inline constexpr auto quicksort_hoare_f = [](const auto first,
+                                                 const auto last) {
+        quicksort_hoare(first, last);
+    };
+
+    template<>
+    struct Label<decltype(quicksort_hoare_f)> {
+        static constexpr std::string_view value {
+            "Quicksort "
+            "(Hoare partitioning, median-of-three pivot, recursive"};
     };
 
     inline constexpr auto stdlib_heapsort_f = [](const auto first,
@@ -815,6 +844,7 @@ namespace {
                            quicksort_lomuto_simple_iterative_f,
                            quicksort_lomuto_f,
                            quicksort_lomuto_iterative_f,
+                           quicksort_hoare_f,
                            stdlib_heapsort_f,
                            stdlib_mergesort_f,
                            stdlib_introsort_f);
