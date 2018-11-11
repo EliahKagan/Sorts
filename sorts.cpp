@@ -381,13 +381,44 @@ namespace {
     }
 
     namespace detail {
-        // Assumes [first, last) is nonempty, partitions it, and returns an
-        // iterator to the pivot. Like the Lomuto scheme, but chooses the pivot
-        // from the middle, not the end. This is the K&R 2 algorithm (p. 87).
         template<typename It>
-        It partition_lomuto(const It first, const It last)
+        constexpr void bring_mid_to_front(const It first, const It last)
         {
             std::iter_swap(first, midpoint(first, last));
+        }
+
+        template<typename It>
+        constexpr It iter_min(const It p, const It q)
+        {
+            return *q < *p ? q : p;
+        }
+
+        template<typename It>
+        constexpr It median_of_three(const It p, const It q, const It r)
+        {
+            if (*p < *q)
+                return *p < *r ? iter_min(q, r) : p;
+            else
+                return *q < *r ? iter_min(p, r) : q;
+        }
+
+        template<typename It>
+        constexpr void bring_median_of_three_to_front(const It first,
+                                                      const It last)
+        {
+            std::iter_swap(first, median_of_three(first,
+                                                  midpoint(first, last),
+                                                  last - 1));
+        }
+    }
+
+    namespace detail::partitions {
+        // Assumes [first, last) is nonempty, partitions it, and returns an
+        // iterator to the pivot. Like the Lomuto scheme, but chooses the pivot
+        // from the beginning, not the end.
+        template<typename It>
+        It lomuto(const It first, const It last)
+        {
             const auto& pivot = *first;
             auto mid = first;
 
@@ -397,20 +428,43 @@ namespace {
             std::iter_swap(first, mid);
             return mid;
         }
+
+#if false
+        // Hoare partition scheme. This implementation assumes there are at
+        template<typename It>
+        It hoare(const It first, It last)
+        {
+            std::iter_swap(first, midpoint(first, last));
+            const auto& pivot = *first;
+
+            for (; ; ) {
+                while (*++first < pivot && first != last) { }
+                while (pivot < *--last & first != last) { }
+                if (first >= last) break;
+                std::iter_swap(mid, last);
+            }
+
+        }
+#endif
     }
 
+    // Quicksort, using Lomuto partition but choosing the pivot from the middle
+    // of the array (by swapping the first and middle elements and then using
+    // the first element as the pivot). This is the K&R 2 algorithm (p. 87).
     template<typename It>
-    void quicksort_lomuto(const It first, const It last)
+    void quicksort_lomuto_simple(const It first, const It last)
     {
         if (detail::possibly_unsorted(first, last)) {
-            auto mid = detail::partition_lomuto(first, last);
-            quicksort_lomuto(first, mid);
-            quicksort_lomuto(++mid, last);
+            detail::bring_mid_to_front(first, last);
+            auto mid = detail::partitions::lomuto(first, last);
+
+            quicksort_lomuto_simple(first, mid);
+            quicksort_lomuto_simple(++mid, last);
         }
     }
 
     template<typename It>
-    void quicksort_lomuto_iterative(It first, It last)
+    void quicksort_lomuto_simple_iterative(It first, It last)
     {
         std::stack<std::tuple<It, It>> intervals;
         intervals.emplace(first, last);
@@ -421,7 +475,9 @@ namespace {
 
             if (!detail::possibly_unsorted(first, last)) continue;
 
-            const auto mid = detail::partition_lomuto(first, last);
+            detail::bring_mid_to_front(first, last);
+            const auto mid = detail::partitions::lomuto(first, last);
+
             intervals.emplace(std::next(mid), last);
             intervals.emplace(first, mid);
         }
@@ -567,24 +623,24 @@ namespace {
         static constexpr std::string_view value {"Heapsort"};
     };
 
-    inline constexpr auto quicksort_lomuto_f = [](const auto first,
-                                                  const auto last) {
-        quicksort_lomuto(first, last);
+    inline constexpr auto quicksort_lomuto_simple_f = [](const auto first,
+                                                         const auto last) {
+        quicksort_lomuto_simple(first, last);
     };
 
     template<>
-    struct Label<decltype(quicksort_lomuto_f)> {
+    struct Label<decltype(quicksort_lomuto_simple_f)> {
         static constexpr std::string_view value {
                 "Quicksort (Lomuto partitioning, recursive)"};
     };
 
-    inline constexpr auto quicksort_lomuto_iterative_f = [](const auto first,
-                                                            const auto last) {
-        quicksort_lomuto_iterative(first, last);
+    inline constexpr auto quicksort_lomuto_simple_iterative_f =
+                            [](const auto first, const auto last) {
+        quicksort_lomuto_simple_iterative(first, last);
     };
 
     template<>
-    struct Label<decltype(quicksort_lomuto_iterative_f)> {
+    struct Label<decltype(quicksort_lomuto_simple_iterative_f)> {
         static constexpr std::string_view value {
                 "Quicksort (Lomuto partitioning, iterative)"};
     };
@@ -691,8 +747,8 @@ namespace {
                            mergesort_topdown_iterative_f,
                            mergesort_bottomup_iterative_f,
                            heapsort_f,
-                           quicksort_lomuto_f,
-                           quicksort_lomuto_iterative_f,
+                           quicksort_lomuto_simple_f,
+                           quicksort_lomuto_simple_iterative_f,
                            stdlib_heapsort_f,
                            stdlib_mergesort_f,
                            stdlib_introsort_f);
