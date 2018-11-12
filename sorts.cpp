@@ -3,7 +3,7 @@
 #include <cassert>
 #include <chrono>
 #include <cmath>
-#include <cstddef>
+#include <cstdlib>
 #include <iostream>
 #include <iterator>
 #include <limits>
@@ -554,6 +554,27 @@ namespace {
     {
         std::make_heap(first, last);
         std::sort_heap(first, last);
+    }
+
+    namespace detail {
+        template<typename It>
+        struct KnownContiguous : std::false_type { };
+
+        template<typename It>
+        inline constexpr auto known_contiguous_v = KnownContiguous<It>::value;
+
+        template<typename T>
+        struct KnownContiguous<T*> : std::true_type { };
+
+        template<typename T, std::size_t N>
+        struct KnownContiguous<typename std::array<T, N>::iterator>
+            : std::true_type { };
+    }
+
+    template<typename It>
+    void stdlib_qsort(const It first, const It last)
+    {
+        // FIXME: implement this
     }
 
     template<typename>
