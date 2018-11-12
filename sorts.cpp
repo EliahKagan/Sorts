@@ -58,6 +58,19 @@ namespace {
         }
     }
 
+    template<typename It>
+    void gnome_sort(const It first, const It last)
+    {
+        for (auto cur = first; cur != last; ) {
+            if (cur == first || !(*cur < *std::prev(cur))) {
+                ++cur;
+            } else {
+                std::iter_swap(cur, std::prev(cur));
+                --cur;
+            }
+        }
+    }
+
     namespace detail {
         template<typename It>
         using Delta = typename std::iterator_traits<It>::difference_type;
@@ -642,6 +655,16 @@ namespace {
         static constexpr std::string_view value {"Bubble sort"};
     };
 
+    inline constexpr auto gnome_sort_f = [](const auto first,
+                                            const auto last) {
+        gnome_sort(first, last);
+    };
+
+    template<>
+    struct Label<decltype(gnome_sort_f)> {
+        static constexpr std::string_view value {"Gnome sort"};
+    };
+
     inline constexpr auto shellsort_hibbard_f = [](const auto first,
                                                    const auto last) {
         shellsort_hibbard(first, last);
@@ -909,7 +932,8 @@ namespace {
     {
         test_algorithms(c, insertion_sort_f,
                            selection_sort_f,
-                           bubble_sort_f);
+                           bubble_sort_f,
+                           gnome_sort_f);
     }
 
     template<typename C>
