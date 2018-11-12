@@ -7,6 +7,7 @@
 #include <iostream>
 #include <iterator>
 #include <limits>
+#include <memory>
 #include <random>
 #include <stack>
 #include <string_view>
@@ -558,23 +559,51 @@ namespace {
 
     namespace detail {
         template<typename It>
-        struct KnownContiguous : std::false_type { };
+        using ValueType = typename std::iterator_traits<It>::value_type;
 
         template<typename It>
-        inline constexpr auto known_contiguous_v = KnownContiguous<It>::value;
+        inline constexpr auto accurate_value_type_v = std::is_same_v<
+                ValueType<It>,
+                std::remove_reference_t<decltype(*std::declval<It>())>>;
 
-        template<typename T>
-        struct KnownContiguous<T*> : std::true_type { };
+        template<typename It>
+        using ValueTypeVector = std::vector<ValueType<It>>;
 
-        template<typename T, std::size_t N>
-        struct KnownContiguous<typename std::array<T, N>::iterator>
-            : std::true_type { };
+        template<typename It>
+        inline constexpr auto known_vector_iterator_v =
+            std::is_same_v<It, typename ValueTypeVector<It>::const_iterator>
+                || std::is_same_v<It, typename ValueTypeVector<It>::iterator>;
+
+        template<typename It>
+        inline constexpr auto known_contiguous_v =
+            std::is_pointer_v<It> || known_vector_iterator_v<It>;
     }
 
     template<typename It>
     void stdlib_qsort(const It first, const It last)
     {
-        // FIXME: implement this
+        static_assert(detail::accurate_value_type_v<It>,
+                "iterator appears not to report its value type correctly");
+        static_assert(detail::known_contiguous_v<It>,
+                "iterator type not in the short known-contiguous whitelist");
+        static_assert(!std::is_const_v<detail::ValueType<It>>,
+                "can't safely sort a range using iterators to const");
+        static_assert(std::is_trivial_v<detail::ValueType<It>>,
+                "can't safetly std::qsort elements not satisfying TrivialType");
+
+        const auto len = last - first;
+        assert(len >= 0);
+        if (len == 0) return;
+
+        std::qsort(std::addressof(*first), static_cast<std::size_t>(len),
+                   sizeof *first, [](const void* const p, const void* const q) {
+            const auto& lhs = *static_cast<const detail::ValueType<It>*>(p);
+            const auto& rhs = *static_cast<const detail::ValueType<It>*>(q);
+
+            if (lhs < rhs) return -1;
+            if (rhs < lhs) return +1;
+            return 0;
+        });
     }
 
     template<typename>
@@ -815,6 +844,17 @@ namespace {
                 "std::sort (usually introsort)"};
     };
 
+    inline constexpr auto stdlib_qsort_f = [](const auto first,
+                                              const auto last) {
+        stdlib_qsort(first, last);
+    };
+
+    template<>
+    struct Label<decltype(stdlib_qsort_f)> {
+        static constexpr std::string_view value {
+            "std::qsort (often quicksort)"};
+    };
+
     template<typename C>
     void print(const C& c, const std::string_view prefix = " ")
     {
@@ -892,7 +932,8 @@ namespace {
                            quicksort_hoare_iterative_f,
                            stdlib_heapsort_f,
                            stdlib_mergesort_f,
-                           stdlib_introsort_f);
+                           stdlib_introsort_f,
+                           stdlib_qsort_f);
     }
 }
 
