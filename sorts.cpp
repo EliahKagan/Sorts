@@ -958,7 +958,7 @@ namespace {
     template<>
     struct Label<decltype(stdlib_heapsort_f)> {
         static constexpr std::string_view value {
-                "std::make_heap + std::sort_heap (heapsort_byswap)"};
+                "std::make_heap + std::sort_heap (heapsort)"};
     };
 
     inline constexpr auto stdlib_mergesort_f = [](const auto first,
