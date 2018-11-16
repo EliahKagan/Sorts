@@ -412,7 +412,7 @@ namespace {
     }
 
     template<typename It>
-    void heapsort_candidate(const It first, const It last)
+    void heapsort(const It first, const It last)
     {
         auto len = last - first;
         if (len < 2) return;
@@ -443,33 +443,21 @@ namespace {
     }
 
     template<typename It>
-    void heapsort(const It first, const It last)
+    void heapsort_byswap(const It first, const It last)
     {
         auto len = last - first;
         if (len < 2) return;
 
-        static constexpr decltype(len) no_child {-1};
-
-        const auto pick_child = [first, &len](const decltype(len) parent) {
-            const auto left = parent * 2 + 1;
-            if (left >= len) return no_child;
-
-            const auto right = left + 1;
-            return right == len || !(first[left] < first[right]) ? left : right;
-        };
-
-        const auto sift_down = [first, pick_child](decltype(len) parent) {
-            auto elem = std::move(first[parent]);
-
+        const auto sift_down = [first, &len](detail::Delta<It> parent) {
             for (; ; ) {
-                const auto child = pick_child(parent);
-                if (child == no_child || !(elem < first[child])) break;
+                const auto child = detail::pick_child(first, len, parent);
+                if (child == detail::no_child<It>
+                        || !(first[parent] < first[child]))
+                    break;
 
-                first[parent] = std::move(first[child]);
+                std::iter_swap(first + parent, first + child);
                 parent = child;
             }
-
-            first[parent] = std::move(elem);
         };
 
         // Rearrange the elements into a binary maxheap.
@@ -872,16 +860,6 @@ namespace {
                 "Mergesort (bottom-up, iterative)"};
     };
 
-    inline constexpr auto heapsort_candidate_f = [](const auto first,
-                                                    const auto last) {
-        heapsort_candidate(first, last);
-    };
-
-    template<>
-    struct Label<decltype(heapsort_candidate_f)> {
-        static constexpr std::string_view value {"Heapsort (candidate)"};
-    };
-
     inline constexpr auto heapsort_f = [](const auto first, const auto last) {
         heapsort(first, last);
     };
@@ -889,6 +867,15 @@ namespace {
     template<>
     struct Label<decltype(heapsort_f)> {
         static constexpr std::string_view value {"Heapsort"};
+    };
+
+    inline constexpr auto heapsort_byswap_f = [](const auto first, const auto last) {
+        heapsort_byswap(first, last);
+    };
+
+    template<>
+    struct Label<decltype(heapsort_byswap_f)> {
+        static constexpr std::string_view value {"Heapsort (swapping)"};
     };
 
     inline constexpr auto quicksort_lomuto_simple_f = [](const auto first,
@@ -971,7 +958,7 @@ namespace {
     template<>
     struct Label<decltype(stdlib_heapsort_f)> {
         static constexpr std::string_view value {
-                "std::make_heap + std::sort_heap (heapsort)"};
+                "std::make_heap + std::sort_heap (heapsort_byswap)"};
     };
 
     inline constexpr auto stdlib_mergesort_f = [](const auto first,
@@ -1079,8 +1066,8 @@ namespace {
                            mergesort_topdown_f,
                            mergesort_topdown_iterative_f,
                            mergesort_bottomup_iterative_f,
-                           heapsort_candidate_f,
                            heapsort_f,
+                           heapsort_byswap_f,
                            quicksort_lomuto_simple_f,
                            quicksort_lomuto_simple_iterative_f,
                            quicksort_lomuto_f,
