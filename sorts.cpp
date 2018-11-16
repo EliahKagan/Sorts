@@ -395,6 +395,53 @@ namespace {
         }
     }
 
+    namespace detail {
+        template<typename It>
+        inline constexpr Delta<It> no_child {-1};
+
+        template<typename It>
+        constexpr Delta<It> pick_child(const It first, const Delta<It> len,
+                                       const Delta<It> parent)
+        {
+            const auto left = parent * 2 + 1;
+            if (left >= len) return no_child<It>;
+
+            const auto right = left + 1;
+            return right == len || !(first[left] < first[right]) ? left : right;
+        }
+    }
+
+    template<typename It>
+    void heapsort_candidate(const It first, const It last)
+    {
+        auto len = last - first;
+        if (len < 2) return;
+
+        const auto sift_down = [first, &len](detail::Delta<It> parent) {
+            auto elem = std::move(first[parent]);
+
+            for (; ; ) {
+                const auto child = detail::pick_child(first, len, parent);
+                if (child == detail::no_child<It> || !(elem < first[child]))
+                    break;
+
+                first[parent] = std::move(first[child]);
+                parent = child;
+            }
+
+            first[parent] = std::move(elem);
+        };
+
+        // Rearrange the elements into a binary maxheap.
+        for (auto parent = len / 2; parent >= 0; --parent) sift_down(parent);
+
+        // Pop each maximum element and place it just after the unsorted region.
+        while (--len != 0) {
+            std::iter_swap(first, first + len);
+            sift_down(0);
+        }
+    }
+
     template<typename It>
     void heapsort(const It first, const It last)
     {
@@ -825,6 +872,16 @@ namespace {
                 "Mergesort (bottom-up, iterative)"};
     };
 
+    inline constexpr auto heapsort_candidate_f = [](const auto first,
+                                                    const auto last) {
+        heapsort_candidate(first, last);
+    };
+
+    template<>
+    struct Label<decltype(heapsort_candidate_f)> {
+        static constexpr std::string_view value {"Heapsort (candidate)"};
+    };
+
     inline constexpr auto heapsort_f = [](const auto first, const auto last) {
         heapsort(first, last);
     };
@@ -1022,6 +1079,7 @@ namespace {
                            mergesort_topdown_f,
                            mergesort_topdown_iterative_f,
                            mergesort_bottomup_iterative_f,
+                           heapsort_candidate_f,
                            heapsort_f,
                            quicksort_lomuto_simple_f,
                            quicksort_lomuto_simple_iterative_f,
