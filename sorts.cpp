@@ -59,6 +59,35 @@ namespace {
     }
 
     template<typename It>
+    void bubble_sort_nonadaptive(const It first, It last)
+    {
+        for (; first != last; --last) {
+            for (auto left = first, right = std::next(left); right != last;
+                                                             ++left, ++right) {
+                if (*right < *left) std::iter_swap(left, right);
+            }
+        }
+    }
+
+    template<typename It>
+    void bubble_sort_maxadaptive(const It first, It last)
+    {
+        while (first != last) {
+            auto last_swapped = first;
+
+            for (auto left = first, right = std::next(left); right != last;
+                                                             ++left, ++right) {
+                if (*right < *left) {
+                    std::iter_swap(left, right);
+                    last_swapped = right;
+                }
+            }
+
+            last = last_swapped;
+        }
+    }
+
+    template<typename It>
     void gnome_sort(const It first, const It last)
     {
         for (auto cur = first; cur != last; ) {
@@ -652,7 +681,28 @@ namespace {
 
     template<>
     struct Label<decltype(bubble_sort_f)> {
-        static constexpr std::string_view value {"Bubble sort"};
+        static constexpr std::string_view value {"Bubble sort (classic)"};
+    };
+
+    inline constexpr auto bubble_sort_nonadaptive_f = [](const auto first,
+                                                         const auto last) {
+        bubble_sort_nonadaptive(first, last);
+    };
+
+    template<>
+    struct Label<decltype(bubble_sort_nonadaptive_f)> {
+        static constexpr std::string_view value {"Bubble sort (non-adaptive)"};
+    };
+
+    inline constexpr auto bubble_sort_maxadaptive_f = [](const auto first,
+                                                         const auto last) {
+        bubble_sort_maxadaptive(first, last);
+    };
+
+    template<>
+    struct Label<decltype(bubble_sort_maxadaptive_f)> {
+        static constexpr std::string_view value {
+                "Bubble sort (fully adaptive)"};
     };
 
     inline constexpr auto gnome_sort_f = [](const auto first,
@@ -933,6 +983,8 @@ namespace {
         test_algorithms(c, insertion_sort_f,
                            selection_sort_f,
                            bubble_sort_f,
+                           bubble_sort_nonadaptive_f,
+                           bubble_sort_maxadaptive_f,
                            gnome_sort_f);
     }
 
