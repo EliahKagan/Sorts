@@ -34,6 +34,18 @@ namespace {
     }
 
     template<typename It>
+    void insertion_sort_byswap(const It first, const It last)
+    {
+        if (first == last) return;
+
+        for (auto right = std::next(first); right != last; ++right) {
+            for (auto left = right; left != first && *left < *std::prev(left);
+                                    --left)
+                std::iter_swap(left, std::prev(left));
+        }
+    }
+
+    template<typename It>
     void selection_sort(It first, const It last)
     {
         for (; first != last; ++first)
@@ -664,6 +676,16 @@ namespace {
         static constexpr std::string_view value {"Insertion sort"};
     };
 
+    inline constexpr auto insertion_sort_byswap_f = [](const auto first,
+                                                       const auto last) {
+        insertion_sort_byswap(first, last);
+    };
+
+    template<>
+    struct Label<decltype(insertion_sort_byswap_f)> {
+        static constexpr std::string_view value {"Insertion sort (swapping)"};
+    };
+
     inline constexpr auto selection_sort_f = [](const auto first,
                                                 const auto last) {
         selection_sort(first, last);
@@ -981,6 +1003,7 @@ namespace {
     void test_slow(const C& c)
     {
         test_algorithms(c, insertion_sort_f,
+                           insertion_sort_byswap_f,
                            selection_sort_f,
                            bubble_sort_f,
                            bubble_sort_nonadaptive_f,
