@@ -678,7 +678,7 @@ namespace {
         static_assert(!std::is_const_v<detail::ValueType<It>>,
                 "can't safely sort a range using iterators to const");
         static_assert(std::is_trivial_v<detail::ValueType<It>>,
-                "can't safetly std::qsort elements not satisfying TrivialType");
+                "can't safely std::qsort elements not satisfying TrivialType");
 
         const auto len = last - first;
         assert(len >= 0);
