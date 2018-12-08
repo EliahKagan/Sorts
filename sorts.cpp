@@ -869,7 +869,8 @@ namespace {
         static constexpr std::string_view value {"Heapsort"};
     };
 
-    inline constexpr auto heapsort_byswap_f = [](const auto first, const auto last) {
+    inline constexpr auto heapsort_byswap_f = [](const auto first,
+                                                 const auto last) {
         heapsort_byswap(first, last);
     };
 
