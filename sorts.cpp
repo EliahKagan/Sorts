@@ -1092,13 +1092,18 @@ namespace {
     }
 
     template<typename C>
-    void test_slow(const C& c)
+    void test_insertion_sorts(const C& c)
     {
         test_algorithms(c, insertion_sort_f,
                            insertion_sort_byswap_f,
                            binary_insertion_sort_f,
-                           binary_insertion_sort_byrotate_f,
-                           selection_sort_f,
+                           binary_insertion_sort_byrotate_f);
+    }
+
+    template<typename C>
+    void test_other_slow(const C& c)
+    {
+        test_algorithms(c, selection_sort_f,
                            bubble_sort_f,
                            bubble_sort_nonadaptive_f,
                            bubble_sort_maxadaptive_f,
@@ -1129,20 +1134,38 @@ namespace {
                            stdlib_introsort_f,
                            stdlib_qsort_f);
     }
+
+    bool will_do_slowest(const int argc, const char* const* const argv)
+    {
+        assert(argc > 0);
+
+        return std::none_of(argv + 1, argv + argc, [](const auto arg) noexcept {
+            using namespace std::string_view_literals;
+            return arg == "-S"sv || arg == "--skip-slowest"sv;
+        });
+    }
+
+    auto make_generator()
+    {
+        using Range = std::numeric_limits<int>;
+        using Dist = std::uniform_int_distribution<int>;
+
+        return [eng = std::mt19937{std::random_device{}()},
+                dist = Dist{Range::min(), Range::max()}](const std::size_t len)
+                mutable {
+            std::vector<int> a (len);
+            for (auto& x : a) x = dist(eng); // FIXME: use std::generate
+            return a;
+        };
+    }
+
+    constexpr auto slow_threshold = 1'000'000;
 }
 
-int main()
+int main(int argc, char **argv)
 {
-    using Range = std::numeric_limits<int>;
-    using Dist = std::uniform_int_distribution<int>;
-
-    auto generate = [eng = std::mt19937{std::random_device{}()},
-                     dist = Dist{Range::min(), Range::max()}
-            ](const std::size_t len) mutable {
-        std::vector<int> a (len);
-        for (auto& x : a) x = dist(eng);
-        return a;
-    };
+    const auto do_slowest = will_do_slowest(argc, argv);
+    auto gen = make_generator();
 
     const std::vector<std::vector<int>> vs {
         {111, 333, 222},
@@ -1152,15 +1175,16 @@ int main()
         {1, 2},
         {5},
         {},
-        generate(6),
-        generate(1000),
-        generate(10'000),
-        generate(100'000),
-        generate(250'000),
-        generate(1'000'000),
-        generate(10'000'000),
-        generate(100'000'000),
-        //generate(1'000'000'000)
+        gen(6),
+        gen(1000),
+        gen(10'000),
+        gen(100'000),
+        gen(250'000),
+        gen(500'000),
+        gen(1'000'000),
+        gen(10'000'000),
+        gen(100'000'000),
+        //gen(1'000'000'000)
     };
 
     for (const auto& v : vs) {
@@ -1168,7 +1192,11 @@ int main()
         print_if_small(v);
         std::cout << ".\n";
 
-        if (size(v) <= 250'000) test_slow(v);
+        if (size(v) <= slow_threshold) {
+            test_insertion_sorts(v);
+            if (do_slowest) test_other_slow(v);
+        }
+
         test_fast(v);
 
         std::cout << '\n';
