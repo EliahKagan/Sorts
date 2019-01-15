@@ -45,7 +45,20 @@ namespace {
         }
     }
 
-    // TODO: implement binary_insertion_sort[_bymove]
+    template<typename It>
+    void binary_insertion_sort(const It first, const It last)
+    {
+        if (first == last) return;
+
+        for (auto right = std::next(first); right != last; ++right) {
+            auto elem = std::move(*right);
+
+            const auto left = std::upper_bound(first, right, elem);
+            std::move_backward(left, right, std::next(right));
+
+            *left = std::move(elem);
+        }
+    }
 
     template<typename It>
     void binary_insertion_sort_byrotate(const It first, const It last)
@@ -734,6 +747,16 @@ namespace {
         static constexpr std::string_view value {"Insertion sort (swapping)"};
     };
 
+    inline constexpr auto binary_insertion_sort_f = [](const auto first,
+                                                       const auto last) {
+        binary_insertion_sort(first, last);
+    };
+
+    template<>
+    struct Label<decltype(binary_insertion_sort_f)> {
+        static constexpr std::string_view value {"Binary insertion sort"};
+    };
+
     inline constexpr auto binary_insertion_sort_byrotate_f =
             [](const auto first, const auto last) {
         binary_insertion_sort_byrotate(first, last);
@@ -1073,6 +1096,7 @@ namespace {
     {
         test_algorithms(c, insertion_sort_f,
                            insertion_sort_byswap_f,
+                           binary_insertion_sort_f,
                            binary_insertion_sort_byrotate_f,
                            selection_sort_f,
                            bubble_sort_f,
