@@ -45,6 +45,17 @@ namespace {
         }
     }
 
+    template<typename It> // FIXME: finish implementing this
+    void binary_insertion_sort(const It first, const It last)
+    {
+        if (first == last) return;
+
+        for (auto right = std::next(first); right != last; ++right) {
+            const auto left = std::upper_bound(first, right, *right);
+            std::rotate(left, right, std::next(right));
+        }
+    }
+
     template<typename It>
     void selection_sort(It first, const It last)
     {
