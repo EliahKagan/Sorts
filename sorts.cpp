@@ -45,8 +45,10 @@ namespace {
         }
     }
 
-    template<typename It> // FIXME: finish implementing this
-    void binary_insertion_sort(const It first, const It last)
+    // TODO: implement binary_insertion_sort[_bymove]
+
+    template<typename It>
+    void binary_insertion_sort_byrotate(const It first, const It last)
     {
         if (first == last) return;
 
@@ -732,6 +734,17 @@ namespace {
         static constexpr std::string_view value {"Insertion sort (swapping)"};
     };
 
+    inline constexpr auto binary_insertion_sort_byrotate_f =
+            [](const auto first, const auto last) {
+        binary_insertion_sort_byrotate(first, last);
+    };
+
+    template<>
+    struct Label<decltype(binary_insertion_sort_byrotate_f)> {
+        static constexpr std::string_view value {
+                "Binary insertion sort (rotating)"};
+    };
+
     inline constexpr auto selection_sort_f = [](const auto first,
                                                 const auto last) {
         selection_sort(first, last);
@@ -1060,6 +1073,7 @@ namespace {
     {
         test_algorithms(c, insertion_sort_f,
                            insertion_sort_byswap_f,
+                           binary_insertion_sort_byrotate_f,
                            selection_sort_f,
                            bubble_sort_f,
                            bubble_sort_nonadaptive_f,
@@ -1118,6 +1132,7 @@ int main()
         generate(1000),
         generate(10'000),
         generate(100'000),
+        generate(250'000),
         generate(1'000'000),
         generate(10'000'000),
         generate(100'000'000),
@@ -1129,7 +1144,7 @@ int main()
         print_if_small(v);
         std::cout << ".\n";
 
-        if (size(v) <= 100'000) test_slow(v);
+        if (size(v) <= 250'000) test_slow(v);
         test_fast(v);
 
         std::cout << '\n';
