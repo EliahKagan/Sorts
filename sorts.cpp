@@ -1154,7 +1154,7 @@ namespace {
                 dist = Dist{Range::min(), Range::max()}](const std::size_t len)
                 mutable {
             std::vector<int> a (len);
-            for (auto& x : a) x = dist(eng); // FIXME: use std::generate
+            for (auto& x : a) x = dist(eng); // FIXME: use std::generate?
             return a;
         };
     }
