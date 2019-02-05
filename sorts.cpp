@@ -181,18 +181,18 @@ namespace {
 
         // This ratio appears in the computations of some of the experimentally
         // faster (average-case) gap sequences for shellsort.
-        inline constexpr auto nine_fourths = 2.25;
+        constexpr auto nine_fourths = 2.25;
 
         // This is the fastest known sequence in the average case, based on
         // experimental evidence. Only nine terms are known (with no formula).
-        inline constexpr std::array ciura_gaps = {
+        constexpr std::array ciura_gaps = {
                 1, 4, 10, 23, 57, 132, 301, 701, 1750};
     }
 
     namespace detail::gaps {
         // Generates gaps consisting of one less than powers of 2. Found by
         // Hibbard 1963: https://dl.acm.org/citation.cfm?doid=366552.366557
-        inline constexpr auto hibbard = [](const auto len, auto d_first) {
+        constexpr auto hibbard = [](const auto len, auto d_first) {
             for (auto k = 1; ; ++k) {
                 const auto g = (decltype(len){1} << k) - 1;
                 if (g >= len) break;
@@ -207,7 +207,7 @@ namespace {
         // David Eisenstat's method https://stackoverflow.com/a/25344494
         // (Eisenstat 2014) based on Dijkstra's solution to the Hamming problem
         // (Dijkstra 1976, see https://en.wikipedia.org/wiki/Regular_number).
-        inline constexpr auto three_smooth = [](const auto len, auto d_first) {
+        constexpr auto three_smooth = [](const auto len, auto d_first) {
             std::vector<std::remove_const_t<decltype(len)>> aux;
             decltype(size(aux)) co_two_pos {}, co_three_pos {};
 
@@ -227,7 +227,7 @@ namespace {
         // Generate gaps whose rate of increase gradually rises. Found by
         // Sedgewick 1986: https://doi.org/10.1016/0196-6774(86)90001-5 p.165
         // See also https://oeis.org/A036562.
-        inline constexpr auto sedgewick = [](const auto len, auto d_first) {
+        constexpr auto sedgewick = [](const auto len, auto d_first) {
             if (len == 0) return;
 
             constexpr decltype(len) one {1};
@@ -244,7 +244,7 @@ namespace {
         // Tokuda 1992: https://dl.acm.org/citation.cfm?id=659879. See also
         // https://oeis.org/A108870. The formula used here appears in
         // https://en.wikipedia.org/wiki/Shellsort#Gap_sequences.
-        inline constexpr auto tokuda = [](const auto len, auto d_first) {
+        constexpr auto tokuda = [](const auto len, auto d_first) {
             for (auto h = 1.0; ; h = h * nine_fourths + 1.0) {
                 const auto g = static_cast<decltype(len)>(std::ceil(h));
                 if (g >= len) break;
@@ -258,7 +258,7 @@ namespace {
         // https://oeis.org/A102549 for the initial sequence and
         // https://en.wikipedia.org/wiki/Shellsort#Gap_sequences for the
         // idea of extending it in this way.
-        inline constexpr auto quasi_ciura = [](const auto len, auto d_first) {
+        constexpr auto quasi_ciura = [](const auto len, auto d_first) {
             auto g = decltype(len){};
 
             for (const auto h : ciura_gaps) {
@@ -425,7 +425,7 @@ namespace {
 
     namespace detail {
         template<typename It>
-        inline constexpr Delta<It> no_child {-1};
+        constexpr Delta<It> no_child {-1};
 
         template<typename It>
         constexpr Delta<It> pick_child(const It first, const Delta<It> len,
@@ -679,7 +679,7 @@ namespace {
         using ValueType = typename std::iterator_traits<It>::value_type;
 
         template<typename It>
-        inline constexpr auto accurate_value_type_v = std::is_same_v<
+        constexpr auto accurate_value_type_v = std::is_same_v<
                 ValueType<It>,
                 std::remove_reference_t<decltype(*std::declval<It>())>>;
 
@@ -687,12 +687,12 @@ namespace {
         using ValueTypeVector = std::vector<ValueType<It>>;
 
         template<typename It>
-        inline constexpr auto known_vector_iterator_v =
+        constexpr auto known_vector_iterator_v =
             std::is_same_v<It, typename ValueTypeVector<It>::const_iterator>
                 || std::is_same_v<It, typename ValueTypeVector<It>::iterator>;
 
         template<typename It>
-        inline constexpr auto known_contiguous_v =
+        constexpr auto known_contiguous_v =
             std::is_pointer_v<It> || known_vector_iterator_v<It>;
     }
 
@@ -724,273 +724,254 @@ namespace {
     }
 
     template<typename T>
-    inline constexpr auto label = label<const T>;
+    constexpr auto label = label<const T>;
 
     template<typename T>
-    inline constexpr auto label<const T> = ""sv;
+    constexpr auto label<const T> = ""sv;
 
-    inline constexpr auto insertion_sort_f = [](const auto first,
-                                                const auto last) {
+    constexpr auto insertion_sort_f = [](const auto first, const auto last) {
         insertion_sort(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(insertion_sort_f)> =
-            "Insertion sort"sv;
+    constexpr auto label<decltype(insertion_sort_f)> = "Insertion sort"sv;
 
-    inline constexpr auto insertion_sort_byswap_f = [](const auto first,
-                                                       const auto last) {
+    constexpr auto insertion_sort_byswap_f = [](const auto first,
+                                                const auto last) {
         insertion_sort_byswap(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(insertion_sort_byswap_f)> =
+    constexpr auto label<decltype(insertion_sort_byswap_f)> =
             "Insertion sort (swapping)"sv;
 
-    inline constexpr auto binary_insertion_sort_f = [](const auto first,
-                                                       const auto last) {
+    constexpr auto binary_insertion_sort_f = [](const auto first,
+                                                const auto last) {
         binary_insertion_sort(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(binary_insertion_sort_f)> =
+    constexpr auto label<decltype(binary_insertion_sort_f)> =
             "Binary insertion sort"sv;
 
-    inline constexpr auto binary_insertion_sort_byrotate_f =
-            [](const auto first, const auto last) {
+    constexpr auto binary_insertion_sort_byrotate_f = [](const auto first,
+                                                         const auto last) {
         binary_insertion_sort_byrotate(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(binary_insertion_sort_byrotate_f)> =
+    constexpr auto label<decltype(binary_insertion_sort_byrotate_f)> =
             "Binary insertion sort (rotating)"sv;
 
-    inline constexpr auto selection_sort_f = [](const auto first,
-                                                const auto last) {
+    constexpr auto selection_sort_f = [](const auto first, const auto last) {
         selection_sort(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(selection_sort_f)> =
-            "Selection sort"sv;
+    constexpr auto label<decltype(selection_sort_f)> = "Selection sort"sv;
 
-    inline constexpr auto bubble_sort_f = [](const auto first,
-                                             const auto last) {
+    constexpr auto bubble_sort_f = [](const auto first, const auto last) {
         bubble_sort(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(bubble_sort_f)> =
-            "Bubble sort (classic)"sv;
+    constexpr auto label<decltype(bubble_sort_f)> = "Bubble sort (classic)"sv;
 
-    inline constexpr auto bubble_sort_nonadaptive_f = [](const auto first,
-                                                         const auto last) {
+    constexpr auto bubble_sort_nonadaptive_f = [](const auto first,
+                                                  const auto last) {
         bubble_sort_nonadaptive(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(bubble_sort_nonadaptive_f)> =
+    constexpr auto label<decltype(bubble_sort_nonadaptive_f)> =
             "Bubble sort (non-adaptive)"sv;
 
-    inline constexpr auto bubble_sort_maxadaptive_f = [](const auto first,
-                                                         const auto last) {
+    constexpr auto bubble_sort_maxadaptive_f = [](const auto first,
+                                                  const auto last) {
         bubble_sort_maxadaptive(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(bubble_sort_maxadaptive_f)> =
+    constexpr auto label<decltype(bubble_sort_maxadaptive_f)> =
             "Bubble sort (fully adaptive)"sv;
 
-    inline constexpr auto gnome_sort_f = [](const auto first,
-                                            const auto last) {
+    constexpr auto gnome_sort_f = [](const auto first, const auto last) {
         gnome_sort(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(gnome_sort_f)> = "Gnome sort"sv;
+    constexpr auto label<decltype(gnome_sort_f)> = "Gnome sort"sv;
 
-    inline constexpr auto shellsort_hibbard_f = [](const auto first,
-                                                   const auto last) {
+    constexpr auto shellsort_hibbard_f = [](const auto first, const auto last) {
         shellsort_hibbard(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(shellsort_hibbard_f)> =
+    constexpr auto label<decltype(shellsort_hibbard_f)> =
             "Shellsort (Hibbard gap sequence)"sv;
 
-    inline constexpr auto shellsort_3smooth_f = [](const auto first,
-                                                   const auto last) {
+    constexpr auto shellsort_3smooth_f = [](const auto first, const auto last) {
         shellsort_3smooth(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(shellsort_3smooth_f)> =
+    constexpr auto label<decltype(shellsort_3smooth_f)> =
             "Shellsort (3-smooth gap sequence)"sv;
 
-    inline constexpr auto shellsort_sedgewick_f = [](const auto first,
-                                                     const auto last) {
+    constexpr auto shellsort_sedgewick_f = [](const auto first,
+                                              const auto last) {
         shellsort_sedgewick(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(shellsort_sedgewick_f)> =
+    constexpr auto label<decltype(shellsort_sedgewick_f)> =
             "Shellsort (Sedgewick gap sequence)"sv;
 
-    inline constexpr auto shellsort_tokuda_f = [](const auto first,
-                                                  const auto last) {
+    constexpr auto shellsort_tokuda_f = [](const auto first, const auto last) {
         shellsort_tokuda(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(shellsort_tokuda_f)> =
+    constexpr auto label<decltype(shellsort_tokuda_f)> =
             "Shellsort (Tokuda gap sequence)"sv;
 
-    inline constexpr auto shellsort_quasi_ciura_f = [](const auto first,
-                                                       const auto last) {
+    constexpr auto shellsort_quasi_ciura_f = [](const auto first,
+                                                const auto last) {
         shellsort_quasi_ciura(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(shellsort_quasi_ciura_f)> =
+    constexpr auto label<decltype(shellsort_quasi_ciura_f)> =
             "Shellsort (Extended Ciura gap sequence)"sv;
 
-    inline constexpr auto mergesort_topdown_f = [](const auto first,
-                                                   const auto last) {
+    constexpr auto mergesort_topdown_f = [](const auto first, const auto last) {
         mergesort_topdown(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(mergesort_topdown_f)> =
+    constexpr auto label<decltype(mergesort_topdown_f)> =
             "Mergesort (top-down, recursive)"sv;
 
-    inline constexpr auto mergesort_topdown_iterative_f = [](const auto first,
-                                                             const auto last) {
+    constexpr auto mergesort_topdown_iterative_f = [](const auto first,
+                                                      const auto last) {
         mergesort_topdown_iterative(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(mergesort_topdown_iterative_f)> =
+    constexpr auto label<decltype(mergesort_topdown_iterative_f)> =
             "Mergesort (top-down, iterative)"sv;
 
-    inline constexpr auto mergesort_bottomup_iterative_f = [](const auto first,
-                                                              const auto last) {
+    constexpr auto mergesort_bottomup_iterative_f = [](const auto first,
+                                                       const auto last) {
         mergesort_bottomup_iterative(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(mergesort_bottomup_iterative_f)> =
+    constexpr auto label<decltype(mergesort_bottomup_iterative_f)> =
             "Mergesort (bottom-up, iterative)"sv;
 
-    inline constexpr auto heapsort_f = [](const auto first, const auto last) {
+    constexpr auto heapsort_f = [](const auto first, const auto last) {
         heapsort(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(heapsort_f)> = "Heapsort"sv;
+    constexpr auto label<decltype(heapsort_f)> = "Heapsort"sv;
 
-    inline constexpr auto heapsort_byswap_f = [](const auto first,
-                                                 const auto last) {
+    constexpr auto heapsort_byswap_f = [](const auto first, const auto last) {
         heapsort_byswap(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(heapsort_byswap_f)> =
-            "Heapsort (swapping)"sv;
+    constexpr auto label<decltype(heapsort_byswap_f)> = "Heapsort (swapping)"sv;
 
-    inline constexpr auto quicksort_lomuto_simple_f = [](const auto first,
-                                                         const auto last) {
+    constexpr auto quicksort_lomuto_simple_f = [](const auto first,
+                                                  const auto last) {
         quicksort_lomuto_simple(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(quicksort_lomuto_simple_f)> =
+    constexpr auto label<decltype(quicksort_lomuto_simple_f)> =
             "Quicksort "
             "(Lomuto partitioning, middle-element pivot, recursive)"sv;
 
-    inline constexpr auto quicksort_lomuto_simple_iterative_f =
-                            [](const auto first, const auto last) {
+    constexpr auto quicksort_lomuto_simple_iterative_f = [](const auto first,
+                                                            const auto last) {
         quicksort_lomuto_simple_iterative(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(quicksort_lomuto_simple_iterative_f)> =
+    constexpr auto label<decltype(quicksort_lomuto_simple_iterative_f)> =
             "Quicksort "
             "(Lomuto partitioning, middle-element pivot, iterative)"sv;
 
-    inline constexpr auto quicksort_lomuto_f = [](const auto first,
-                                                  const auto last) {
+    constexpr auto quicksort_lomuto_f = [](const auto first, const auto last) {
         quicksort_lomuto(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(quicksort_lomuto_f)> =
+    constexpr auto label<decltype(quicksort_lomuto_f)> =
             "Quicksort "
             "(Lomuto partitioning, median-of-three pivot, recursive)"sv;
 
-    inline constexpr auto quicksort_lomuto_iterative_f = [](const auto first,
-                                                            const auto last) {
+    constexpr auto quicksort_lomuto_iterative_f = [](const auto first,
+                                                     const auto last) {
         quicksort_lomuto_iterative(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(quicksort_lomuto_iterative_f)> =
+    constexpr auto label<decltype(quicksort_lomuto_iterative_f)> =
             "Quicksort "
             "(Lomuto partitioning, median-of-three pivot, iterative)"sv;
 
-    inline constexpr auto quicksort_hoare_f = [](const auto first,
-                                                 const auto last) {
+    constexpr auto quicksort_hoare_f = [](const auto first, const auto last) {
         quicksort_hoare(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(quicksort_hoare_f)> =
+    constexpr auto label<decltype(quicksort_hoare_f)> =
             "Quicksort "
             "(Hoare partitioning, median-of-three pivot, recursive)"sv;
 
-    inline constexpr auto quicksort_hoare_iterative_f = [](const auto first,
-                                                           const auto last) {
+    constexpr auto quicksort_hoare_iterative_f = [](const auto first,
+                                                    const auto last) {
         quicksort_hoare_iterative(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(quicksort_hoare_iterative_f)> =
+    constexpr auto label<decltype(quicksort_hoare_iterative_f)> =
             "Quicksort "
             "(Hoare partitioning, median-of-three pivot, iterative)"sv;
 
-    inline constexpr auto stdlib_heapsort_f = [](const auto first,
-                                                 const auto last) {
+    constexpr auto stdlib_heapsort_f = [](const auto first, const auto last) {
         stdlib_heapsort(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(stdlib_heapsort_f)> =
+    constexpr auto label<decltype(stdlib_heapsort_f)> =
             "std::make_heap + std::sort_heap (heapsort)"sv;
 
-    inline constexpr auto stdlib_mergesort_f = [](const auto first,
-                                                  const auto last) {
+    constexpr auto stdlib_mergesort_f = [](const auto first, const auto last) {
         std::stable_sort(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(stdlib_mergesort_f)> =
+    constexpr auto label<decltype(stdlib_mergesort_f)> =
             "std::stable_sort (usually adaptive mergesort)"sv;
 
-    inline constexpr auto stdlib_introsort_f = [](const auto first,
-                                                  const auto last) {
+    constexpr auto stdlib_introsort_f = [](const auto first, const auto last) {
         std::sort(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(stdlib_introsort_f)> =
+    constexpr auto label<decltype(stdlib_introsort_f)> =
             "std::sort (usually introsort)"sv;
 
-    inline constexpr auto stdlib_qsort_f = [](const auto first,
-                                              const auto last) {
+    constexpr auto stdlib_qsort_f = [](const auto first, const auto last) {
         stdlib_qsort(first, last);
     };
 
     template<>
-    inline constexpr auto label<decltype(stdlib_qsort_f)> =
+    constexpr auto label<decltype(stdlib_qsort_f)> =
             "std::qsort (often quicksort)"sv;
 
     template<typename C>
