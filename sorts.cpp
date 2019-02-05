@@ -17,6 +17,8 @@
 #include <vector>
 
 namespace {
+    using namespace std::string_view_literals;
+
     template<typename It>
     void insertion_sort(const It first, const It last)
     {
@@ -721,11 +723,11 @@ namespace {
         });
     }
 
-    template<typename>
-    struct Label { };
+    template<typename T>
+    inline constexpr auto label = label<const T>;
 
-    template<typename F>
-    inline constexpr auto label_v = Label<const F>::value;
+    template<typename T>
+    inline constexpr auto label<const T> = ""sv;
 
     inline constexpr auto insertion_sort_f = [](const auto first,
                                                 const auto last) {
@@ -733,9 +735,8 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(insertion_sort_f)> {
-        static constexpr std::string_view value {"Insertion sort"};
-    };
+    inline constexpr auto label<decltype(insertion_sort_f)> =
+            "Insertion sort"sv;
 
     inline constexpr auto insertion_sort_byswap_f = [](const auto first,
                                                        const auto last) {
@@ -743,9 +744,8 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(insertion_sort_byswap_f)> {
-        static constexpr std::string_view value {"Insertion sort (swapping)"};
-    };
+    inline constexpr auto label<decltype(insertion_sort_byswap_f)> =
+            "Insertion sort (swapping)"sv;
 
     inline constexpr auto binary_insertion_sort_f = [](const auto first,
                                                        const auto last) {
@@ -753,9 +753,8 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(binary_insertion_sort_f)> {
-        static constexpr std::string_view value {"Binary insertion sort"};
-    };
+    inline constexpr auto label<decltype(binary_insertion_sort_f)> =
+            "Binary insertion sort"sv;
 
     inline constexpr auto binary_insertion_sort_byrotate_f =
             [](const auto first, const auto last) {
@@ -763,10 +762,8 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(binary_insertion_sort_byrotate_f)> {
-        static constexpr std::string_view value {
-                "Binary insertion sort (rotating)"};
-    };
+    inline constexpr auto label<decltype(binary_insertion_sort_byrotate_f)> =
+            "Binary insertion sort (rotating)"sv;
 
     inline constexpr auto selection_sort_f = [](const auto first,
                                                 const auto last) {
@@ -774,9 +771,8 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(selection_sort_f)> {
-        static constexpr std::string_view value {"Selection sort"};
-    };
+    inline constexpr auto label<decltype(selection_sort_f)> =
+            "Selection sort"sv;
 
     inline constexpr auto bubble_sort_f = [](const auto first,
                                              const auto last) {
@@ -784,9 +780,8 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(bubble_sort_f)> {
-        static constexpr std::string_view value {"Bubble sort (classic)"};
-    };
+    inline constexpr auto label<decltype(bubble_sort_f)> =
+            "Bubble sort (classic)"sv;
 
     inline constexpr auto bubble_sort_nonadaptive_f = [](const auto first,
                                                          const auto last) {
@@ -794,9 +789,8 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(bubble_sort_nonadaptive_f)> {
-        static constexpr std::string_view value {"Bubble sort (non-adaptive)"};
-    };
+    inline constexpr auto label<decltype(bubble_sort_nonadaptive_f)> =
+            "Bubble sort (non-adaptive)"sv;
 
     inline constexpr auto bubble_sort_maxadaptive_f = [](const auto first,
                                                          const auto last) {
@@ -804,10 +798,8 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(bubble_sort_maxadaptive_f)> {
-        static constexpr std::string_view value {
-                "Bubble sort (fully adaptive)"};
-    };
+    inline constexpr auto label<decltype(bubble_sort_maxadaptive_f)> =
+            "Bubble sort (fully adaptive)"sv;
 
     inline constexpr auto gnome_sort_f = [](const auto first,
                                             const auto last) {
@@ -815,9 +807,7 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(gnome_sort_f)> {
-        static constexpr std::string_view value {"Gnome sort"};
-    };
+    inline constexpr auto label<decltype(gnome_sort_f)> = "Gnome sort"sv;
 
     inline constexpr auto shellsort_hibbard_f = [](const auto first,
                                                    const auto last) {
@@ -825,10 +815,8 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(shellsort_hibbard_f)> {
-        static constexpr std::string_view value {
-                "Shellsort (Hibbard gap sequence)"};
-    };
+    inline constexpr auto label<decltype(shellsort_hibbard_f)> =
+            "Shellsort (Hibbard gap sequence)"sv;
 
     inline constexpr auto shellsort_3smooth_f = [](const auto first,
                                                    const auto last) {
@@ -836,10 +824,8 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(shellsort_3smooth_f)> {
-        static constexpr std::string_view value {
-                "Shellsort (3-smooth gap sequence)"};
-    };
+    inline constexpr auto label<decltype(shellsort_3smooth_f)> =
+            "Shellsort (3-smooth gap sequence)"sv;
 
     inline constexpr auto shellsort_sedgewick_f = [](const auto first,
                                                      const auto last) {
@@ -847,10 +833,8 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(shellsort_sedgewick_f)> {
-        static constexpr std::string_view value {
-                "Shellsort (Sedgewick gap sequence)"};
-    };
+    inline constexpr auto label<decltype(shellsort_sedgewick_f)> =
+            "Shellsort (Sedgewick gap sequence)"sv;
 
     inline constexpr auto shellsort_tokuda_f = [](const auto first,
                                                   const auto last) {
@@ -858,10 +842,8 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(shellsort_tokuda_f)> {
-        static constexpr std::string_view value {
-                "Shellsort (Tokuda gap sequence)"};
-    };
+    inline constexpr auto label<decltype(shellsort_tokuda_f)> =
+            "Shellsort (Tokuda gap sequence)"sv;
 
     inline constexpr auto shellsort_quasi_ciura_f = [](const auto first,
                                                        const auto last) {
@@ -869,10 +851,8 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(shellsort_quasi_ciura_f)> {
-        static constexpr std::string_view value {
-                "Shellsort (Extended Ciura gap sequence)"};
-    };
+    inline constexpr auto label<decltype(shellsort_quasi_ciura_f)> =
+            "Shellsort (Extended Ciura gap sequence)"sv;
 
     inline constexpr auto mergesort_topdown_f = [](const auto first,
                                                    const auto last) {
@@ -880,10 +860,8 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(mergesort_topdown_f)> {
-        static constexpr std::string_view value {
-                "Mergesort (top-down, recursive)"};
-    };
+    inline constexpr auto label<decltype(mergesort_topdown_f)> =
+            "Mergesort (top-down, recursive)"sv;
 
     inline constexpr auto mergesort_topdown_iterative_f = [](const auto first,
                                                              const auto last) {
@@ -891,10 +869,8 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(mergesort_topdown_iterative_f)> {
-        static constexpr std::string_view value {
-            "Mergesort (top-down, iterative)"};
-    };
+    inline constexpr auto label<decltype(mergesort_topdown_iterative_f)> =
+            "Mergesort (top-down, iterative)"sv;
 
     inline constexpr auto mergesort_bottomup_iterative_f = [](const auto first,
                                                               const auto last) {
@@ -902,19 +878,15 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(mergesort_bottomup_iterative_f)> {
-        static constexpr std::string_view value {
-                "Mergesort (bottom-up, iterative)"};
-    };
+    inline constexpr auto label<decltype(mergesort_bottomup_iterative_f)> =
+            "Mergesort (bottom-up, iterative)"sv;
 
     inline constexpr auto heapsort_f = [](const auto first, const auto last) {
         heapsort(first, last);
     };
 
     template<>
-    struct Label<decltype(heapsort_f)> {
-        static constexpr std::string_view value {"Heapsort"};
-    };
+    inline constexpr auto label<decltype(heapsort_f)> = "Heapsort"sv;
 
     inline constexpr auto heapsort_byswap_f = [](const auto first,
                                                  const auto last) {
@@ -922,9 +894,8 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(heapsort_byswap_f)> {
-        static constexpr std::string_view value {"Heapsort (swapping)"};
-    };
+    inline constexpr auto label<decltype(heapsort_byswap_f)> =
+            "Heapsort (swapping)"sv;
 
     inline constexpr auto quicksort_lomuto_simple_f = [](const auto first,
                                                          const auto last) {
@@ -932,11 +903,9 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(quicksort_lomuto_simple_f)> {
-        static constexpr std::string_view value {
-                "Quicksort "
-                "(Lomuto partitioning, middle-element pivot, recursive)"};
-    };
+    inline constexpr auto label<decltype(quicksort_lomuto_simple_f)> =
+            "Quicksort "
+            "(Lomuto partitioning, middle-element pivot, recursive)"sv;
 
     inline constexpr auto quicksort_lomuto_simple_iterative_f =
                             [](const auto first, const auto last) {
@@ -944,11 +913,9 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(quicksort_lomuto_simple_iterative_f)> {
-        static constexpr std::string_view value {
-                "Quicksort "
-                "(Lomuto partitioning, middle-element pivot, iterative)"};
-    };
+    inline constexpr auto label<decltype(quicksort_lomuto_simple_iterative_f)> =
+            "Quicksort "
+            "(Lomuto partitioning, middle-element pivot, iterative)"sv;
 
     inline constexpr auto quicksort_lomuto_f = [](const auto first,
                                                   const auto last) {
@@ -956,11 +923,9 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(quicksort_lomuto_f)> {
-        static constexpr std::string_view value {
-                "Quicksort "
-                "(Lomuto partitioning, median-of-three pivot, recursive)"};
-    };
+    inline constexpr auto label<decltype(quicksort_lomuto_f)> =
+            "Quicksort "
+            "(Lomuto partitioning, median-of-three pivot, recursive)"sv;
 
     inline constexpr auto quicksort_lomuto_iterative_f = [](const auto first,
                                                             const auto last) {
@@ -968,11 +933,9 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(quicksort_lomuto_iterative_f)> {
-        static constexpr std::string_view value {
-                "Quicksort "
-                "(Lomuto partitioning, median-of-three pivot, iterative)"};
-    };
+    inline constexpr auto label<decltype(quicksort_lomuto_iterative_f)> =
+            "Quicksort "
+            "(Lomuto partitioning, median-of-three pivot, iterative)"sv;
 
     inline constexpr auto quicksort_hoare_f = [](const auto first,
                                                  const auto last) {
@@ -980,11 +943,9 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(quicksort_hoare_f)> {
-        static constexpr std::string_view value {
-                "Quicksort "
-                "(Hoare partitioning, median-of-three pivot, recursive)"};
-    };
+    inline constexpr auto label<decltype(quicksort_hoare_f)> =
+            "Quicksort "
+            "(Hoare partitioning, median-of-three pivot, recursive)"sv;
 
     inline constexpr auto quicksort_hoare_iterative_f = [](const auto first,
                                                            const auto last) {
@@ -992,11 +953,9 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(quicksort_hoare_iterative_f)> {
-        static constexpr std::string_view value {
-                "Quicksort "
-                "(Hoare partitioning, median-of-three pivot, iterative)"};
-    };
+    inline constexpr auto label<decltype(quicksort_hoare_iterative_f)> =
+            "Quicksort "
+            "(Hoare partitioning, median-of-three pivot, iterative)"sv;
 
     inline constexpr auto stdlib_heapsort_f = [](const auto first,
                                                  const auto last) {
@@ -1004,10 +963,8 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(stdlib_heapsort_f)> {
-        static constexpr std::string_view value {
-                "std::make_heap + std::sort_heap (heapsort)"};
-    };
+    inline constexpr auto label<decltype(stdlib_heapsort_f)> =
+            "std::make_heap + std::sort_heap (heapsort)"sv;
 
     inline constexpr auto stdlib_mergesort_f = [](const auto first,
                                                   const auto last) {
@@ -1015,10 +972,8 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(stdlib_mergesort_f)> {
-        static constexpr std::string_view value {
-                "std::stable_sort (usually adaptive mergesort)"};
-    };
+    inline constexpr auto label<decltype(stdlib_mergesort_f)> =
+            "std::stable_sort (usually adaptive mergesort)"sv;
 
     inline constexpr auto stdlib_introsort_f = [](const auto first,
                                                   const auto last) {
@@ -1026,10 +981,8 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(stdlib_introsort_f)> {
-        static constexpr std::string_view value {
-                "std::sort (usually introsort)"};
-    };
+    inline constexpr auto label<decltype(stdlib_introsort_f)> =
+            "std::sort (usually introsort)"sv;
 
     inline constexpr auto stdlib_qsort_f = [](const auto first,
                                               const auto last) {
@@ -1037,10 +990,8 @@ namespace {
     };
 
     template<>
-    struct Label<decltype(stdlib_qsort_f)> {
-        static constexpr std::string_view value {
-            "std::qsort (often quicksort)"};
-    };
+    inline constexpr auto label<decltype(stdlib_qsort_f)> =
+            "std::qsort (often quicksort)"sv;
 
     template<typename C>
     void print(const C& c, const std::string_view prefix = " ")
@@ -1070,7 +1021,7 @@ namespace {
         using namespace std::chrono;
         using std::begin, std::end, std::cbegin, std::cend;
 
-        std::cout << label_v<F> << ':' << std::flush;
+        std::cout << label<F> << ':' << std::flush;
 
         const auto ti = steady_clock::now();
         f(begin(c), end(c));
@@ -1140,7 +1091,6 @@ namespace {
         assert(argc > 0);
 
         return std::none_of(argv + 1, argv + argc, [](const auto arg) noexcept {
-            using namespace std::string_view_literals;
             return arg == "-S"sv || arg == "--skip-slowest"sv;
         });
     }
