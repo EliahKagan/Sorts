@@ -1,5 +1,6 @@
 {
     "C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools",
+
     "files.associations": {
         "algorithm": "cpp",
         "cstddef": "cpp",
@@ -48,5 +49,20 @@
         "numeric": "cpp",
         "queue": "cpp",
         "array": "cpp"
-    }
+    },
+    "cSpell.words": [
+        "Ciura",
+        "Eisenstat",
+        "Eisenstat's",
+        "Eliah",
+        "Hibbard",
+        "Hoare",
+        "Kagan",
+        "Lomuto",
+        "Tokuda",
+        "byrotate",
+        "byswap",
+        "degeneracypressure",
+        "gmail"
+    ]
 }

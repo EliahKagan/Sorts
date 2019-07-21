@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(gdb) Launch [David]",
+            "name": "(gdb) Launch [MSYS2 on C:]",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/Sorts.exe",
@@ -25,7 +25,7 @@
             ]
         },
         {
-            "name": "(gdb) Launch [Eliah]",
+            "name": "(gdb) Launch [MSYS2 on D:]",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/Sorts.exe",

@@ -1,3 +1,15 @@
+// sorts.cpp - A demo and limited benchmark of sorting algorithms.
+//
+// Written in 2019 by Eliah Kagan <degeneracypressure@gmail.com>.
+//
+// To the extent possible under law, the author(s) have dedicated all copyright
+// and related and neighboring rights to this software to the public domain
+// worldwide. This software is distributed without any warranty.
+//
+// You should have received a copy of the CC0 Public Domain Dedication along
+// with this software. If not, see
+// <http://creativecommons.org/publicdomain/zero/1.0/>.
+
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -611,7 +623,7 @@ namespace {
     }
 
     // Quicksort, using Lomuto partition but choosing the pivot via the median-
-    // of-three tecdhnique.
+    // of-three technique.
     template<typename It>
     void quicksort_lomuto(const It first, const It last)
     {
