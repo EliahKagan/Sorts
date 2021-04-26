@@ -10,7 +10,7 @@ worldwide. This software is distributed without any warranty.*
 this software. If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.*
 
-This projects implements a number of sorting algorithms and benchmarks them
+This project implements a number of sorting algorithms and benchmarks them
 against one another and those provided by the standard-library implementation.
 
 Currently all the interesting code is in one file, `sorts.cpp`.
