@@ -14,3 +14,5 @@ This project implements a number of sorting algorithms and benchmarks them
 against one another and those provided by the standard-library implementation.
 
 Currently all the interesting code is in one file, `sorts.cpp`.
+
+See also [**Shellsort**](https://github.com/EliahKagan/Shellsort), a C# program that is similar to this but less extensive.
